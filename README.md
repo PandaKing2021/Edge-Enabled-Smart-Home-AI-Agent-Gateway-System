@@ -535,7 +535,7 @@ SOFTWARE.
 ## 👥 Authors and Contributors
 
 ### Project Creator
-- **EdgeHomeAI Team** - Initial architecture design and core development
+- **PandaKing** - Initial architecture design and core development
 
 ### Core Contributors
 - Check GitHub contributor list
