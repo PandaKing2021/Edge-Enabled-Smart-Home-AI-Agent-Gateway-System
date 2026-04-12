@@ -24,7 +24,7 @@
                 android:layout_weight="30"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="时间"
+                android:text="Time"
                 android:textSize="25dp"/>
 
             <TextView
@@ -32,7 +32,7 @@
                 android:layout_weight="30"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="温度"
+                android:text="Temperature"
                 android:textSize="25dp"/>
 
             <TextView
@@ -40,7 +40,7 @@
                 android:layout_weight="30"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="湿度"
+                android:text="Humidity"
                 android:textSize="25dp"/>
 
             <TextView
@@ -48,7 +48,7 @@
                 android:layout_weight="30"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="光照"
+                android:text="Light"
                 android:textSize="25dp"/>
         </LinearLayout>
 
@@ -69,7 +69,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="50"
                 android:layout_height="wrap_content"
-                android:text="返回主页面">
+                android:text="Return to Main">
             </Button>
 
             <Button
@@ -77,7 +77,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="50"
                 android:layout_height="wrap_content"
-                android:text="刷新">
+                android:text="Refresh">
             </Button>
 
         </LinearLayout>

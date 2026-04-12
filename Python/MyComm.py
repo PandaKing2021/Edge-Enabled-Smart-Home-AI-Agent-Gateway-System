@@ -1,15 +1,15 @@
-"""IoT 网关通信协议编解码模块。
+"""IoT gateway communication protocol codec module.
 
-所有 TCP 通信统一使用 JSON 格式，消息以 ``\\n`` (LF) 分隔。
+All TCP communication uniformly uses JSON format, messages are separated by ``\\n`` (LF).
 
-协议结构（命令/响应类）::
+Protocol structure (command/response class)::
 
-    {"op": "操作码", "data": <载荷>, "status": <状态码>}
+    {"op": "operation code", "data": <payload>, "status": <status code>}
 
-旧协议 ``"op|data|status"`` 已被 JSON 格式完全替代。
-用户数据旧格式 ``"user+pwd+key"`` 已被 JSON 对象 ``{"username":...,"password":...,"device_key":...}`` 替代。
+Old protocol ``"op|data|status"`` has been completely replaced by JSON format.
+User data old format ``"user+pwd+key"`` has been replaced by JSON object ``{"username":...,"password":...,"device_key":...}``.
 
-本模块保留四个核心函数签名和返回值格式，以便兼容上层调用。
+This module retains four core function signatures and return value formats for compatibility with upper-level calls.
 """
 
 from common.protocol import (
@@ -21,31 +21,31 @@ from common.protocol import (
 
 
 def format_comm_data_string(operation: str, data, status_code) -> dict:
-    """构造命令 JSON 对象（兼容旧接口名称）。
+    """Construct command JSON object (compatible with old interface name).
 
-    将操作码、数据码、状态码打包为 ``{"op":..., "data":..., "status":...}`` JSON 对象。
+    Pack operation code, data code, status code into ``{"op":..., "data":..., "status":...}`` JSON object.
 
     Args:
-        operation: 操作码（如 ``"add_new_user"``、``"check_userconfig_illegal"``）。
-        data: 载荷数据。
-        status_code: 状态码。
+        operation: Operation code (e.g., ``"add_new_user"``, ``"check_userconfig_illegal"``).
+        data: Payload data.
+        status_code: Status code.
 
     Returns:
-        命令字典（可直接用 ``json.dumps()`` 序列化）。
+        Command dictionary (can be directly serialized with ``json.dumps()``).
     """
     return pack_command(operation, data, status_code)
 
 
 def format_userdata_string(username: str, password: str, device_key: str) -> dict:
-    """构造用户信息 JSON 对象（兼容旧接口名称）。
+    """Construct user information JSON object (compatible with old interface name).
 
     Args:
-        username: 用户名。
-        password: 密码。
-        device_key: 设备密钥。
+        username: Username.
+        password: Password.
+        device_key: Device key.
 
     Returns:
-        用户信息字典。
+        User information dictionary.
     """
     return pack_user_data(username, password, device_key)
 
@@ -66,15 +66,15 @@ def decode_comm_data(message) -> tuple:
 
 
 def decode_user_data(data) -> tuple:
-    """解包用户信息 JSON 对象（兼容旧接口名称）。
+    """Unpack user information JSON object (compatible with old interface name).
 
     Args:
-        data: 用户信息字典。
+        data: User information dictionary.
 
     Returns:
-        元组 ``(username, password, device_key)``。
+        Tuple ``(username, password, device_key)``.
 
     Raises:
-        ValueError: 数据格式错误。
+        ValueError: Data format error.
     """
     return unpack_user_data(data)

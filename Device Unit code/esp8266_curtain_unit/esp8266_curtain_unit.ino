@@ -3,102 +3,102 @@
 #include <ArduinoJson.h>
 #include <Ticker.h>
 
-// 引入配置文件（请先复制 config_template.h 为 config.h 并修改配置）
+// Include configuration file (please copy config_template.h as config.h and modify configuration first)
 #include "config.h"
 
-// 引入OLED必要库
+// Include required OLED libraries
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// 引入基于IIC通信的光照度传感器(BH1750)所必须的库
+// Include required brightness sensor (BH1750) libraries based on I2C communication
 #include <Wire.h>
 #include <BH1750.h>
 
-// 初始化OLED显示屏
+// Initialize OLED display
 #define OLED_X 128
 #define OLED_Y 64
 Adafruit_SSD1306 oled(OLED_X, OLED_Y, &Wire, OLED_RESET_PIN);
 
-// 定义蜂鸣器
+// Define buzzer
 #define buzzerPin BUZZER_PIN
 #define LEDPIN D6
 
-// 初始化光照度传感器对象
+// Initialize brightness sensor object
 BH1750 lightMeter(BH1750_ADDR);
 
-// 传感器数据初始化
-int cur_light = 0; // LED灯状态
-int curtain_status = 0;  // 窗帘的开闭窗台
-float cur_brightness = 0.0;  // 光照度
+// Sensor data initialization
+int cur_light = 0; // LED status
+int curtain_status = 0;  // Curtain open/close status
+float cur_brightness = 0.0;  // Brightness
 
-int access_status = 0; // 监听门禁通过状态
+int access_status = 0; // Monitor door access approval status
 
-int recv_light = 0; // 控制LED灯数据
+int recv_light = 0; // Control LED data
 int recv_curtain_status = 0;
 
-int per_curtain_status = 0; // 用于表示上一次窗帘的状态
+int per_curtain_status = 0; // Used to indicate previous curtain status
 
 Ticker SendTicker;
 Ticker GetTicker;
 WiFiClient client;
 
-const char* device_id = DEVICE_ID;   // 从配置文件读取传感器id
+const char* device_id = DEVICE_ID;   // Read sensor ID from configuration file
 
 int seconds = 0;
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(LEDPIN,OUTPUT);
-  pinMode(buzzerPin, OUTPUT); // 设置蜂鸣器引脚为输出模式
+  pinMode(buzzerPin, OUTPUT); // Set buzzer pin to output mode
   Serial.begin(115200);
 
-  // 初始化 wifi
+  // Initialize WiFi
   wifiInit(WIFI_SSID, WIFI_PASSWORD);
 
-  // 初始化 OLED显示屏
+  // Initialize OLED display
   oled.begin(SSD1306_SWITCHCAPVCC,0x3C);
-  oled.setTextColor(WHITE);  //开像素点发光
-  oled.clearDisplay();  //清屏
-  oled_string_display(2,16,10,"B: ",0); // 光照度情况
-  oled_string_display(2,16,30,"C: ",0); // 窗帘开闭情况
-  oled_string_display(2,16,50,"S: ",0); // 距离开机间隔的描述
+  oled.setTextColor(WHITE);  // Turn on pixel illumination
+  oled.clearDisplay();  // Clear screen
+  oled_string_display(2,16,10,"B: ",0); // Brightness status
+  oled_string_display(2,16,30,"C: ",0); // Curtain open/close status
+  oled_string_display(2,16,50,"S: ",0); // Seconds since boot
 
-  // 窗帘驱动电机端口设置
+  // Curtain motor port settings
   pinMode(CURTAIN_PIN1, OUTPUT);
   pinMode(CURTAIN_PIN2, OUTPUT);
 
-  // 光照度传感器端口设置
+  // Brightness sensor port settings
   Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
   lightMeter.begin();
 
-  // 初始化板载LED灯
+  // Initialize onboard LED
   digitalWrite(LED_PIN, HIGH);
 
-  client.write(device_id); // 发送本设备device_id至Python服务器用于校验
+  client.write(device_id); // Send this device's device_id to Python server for verification
 
-  // 监听门禁是否通过
+  // Listen for door access approval
   listen_door_secur_access();
 
-  // 初始化定期执行函数
+  // Initialize periodic execution functions
   SendTicker.attach(SEND_INTERVAL, sendMsgToGate);
   GetTicker.attach(RECV_INTERVAL, getMsgFromGate);
 }
 
 void loop() {
-  // 获取光照度传感器数据
+  // Get brightness sensor data
   getBrightness();
 
-  // 控制设备
+  // Control device
   controlDevice();
-  
+
   delay(1000);
 }
 
-// 初始化WiFi连接
+// Initialize WiFi connection
 void wifiInit(const char *ssid, const char *password){
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
-    Serial.print("正在连接WiFi: ");
+    Serial.print("Connecting to WiFi: ");
     Serial.println(ssid);
 
     int retry_count = 0;
@@ -107,37 +107,37 @@ void wifiInit(const char *ssid, const char *password){
         delay(1000);
         Serial.print(".");
         retry_count++;
-        if(retry_count > 30) {  // 30秒超时
-            Serial.println("\nWiFi连接超时！");
+        if(retry_count > 30) {  // 30 second timeout
+            Serial.println("\nWiFi connection timeout!");
             return;
         }
     }
 
-    Serial.println("\nWiFi已连接");
-    Serial.print("IP地址: ");
+    Serial.println("\nWiFi connected");
+    Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
 
-    Serial.print("正在连接网关 ");
+    Serial.print("Connecting to gateway ");
     Serial.print(GATEWAY_IP);
     Serial.print(":");
     Serial.println(GATEWAY_PORT);
 
     if (!client.connect(GATEWAY_IP, GATEWAY_PORT)) {
-     Serial.println("网关连接失败");
+     Serial.println("Gateway connection failed");
      return;
     }
 
-    Serial.println("网关已连接");
+    Serial.println("Gateway connected");
 }
 
-// 监听门禁通过以开始通信
+// Listen for door access approval to start communication
 void listen_door_secur_access(){
   Serial.println("Start to listen user accessment...");
   while(1){
      if(client.available()){
-      String jsonStr = client.readStringUntil('\n'); //获取数据，去除结尾回车符
+      String jsonStr = client.readStringUntil('\n'); // Get data, remove trailing newline
 
-      // 当网关发送来开启信号，则更新状态
+      // When gateway sends start signal, update status
       if(jsonStr == "start")
         Serial.println("User access successfully! Start to communication.");
         access_status = 1;
@@ -150,7 +150,7 @@ void listen_door_secur_access(){
 
 void getBrightness(){
   float lux = lightMeter.readLightLevel();
-  
+
   if (isnan(lux)) {
      Serial.println("Error reading brightness value!");
      cur_brightness = 0.0;
@@ -161,32 +161,32 @@ void getBrightness(){
    oled_float_display(2,42,10,cur_brightness,1);
 }
 
-// 网关收发处理部分
+// Gateway send/receive processing part
 void sendMsgToGate(){
-  // 创建消息msg的JSON对象
+  // Create JSON object for message msg
   StaticJsonDocument<200> msg;
   msg["device_id"] = device_id;
   msg["Light_CU"] = cur_light;
   msg["Brightness"] = cur_brightness;
   msg["Curtain_status"] = curtain_status;
 
-  // 序列化JSON对象为字符串，并发送至Python客户端
+  // Serialize JSON object to string and send to Python client
   String jsonStr;
   serializeJson(msg, jsonStr);
-  client.println(jsonStr);  // println 自动追加 \n 结尾
+  client.println(jsonStr);  // println automatically appends \n at the end
   Serial.println("SEND:"+jsonStr);
 }
 
 void getMsgFromGate(){
-  if(client.available()){   
+  if(client.available()){
     StaticJsonDocument<200> msg;
-    String jsonStr = client.readStringUntil('\n'); //获取数据，回车符作为结尾
+    String jsonStr = client.readStringUntil('\n'); // Get data, newline as delimiter
 
 
-    // 将消息字符串转换为json对象
+    // Convert message string to JSON object
     deserializeJson(msg,jsonStr);
-  
-    // 更新数据
+
+    // Update data
     recv_curtain_status = msg["Curtain_status"];
     recv_light = msg["Light_CU"];
     Serial.println("RECV:"+ jsonStr);
@@ -194,15 +194,15 @@ void getMsgFromGate(){
   Serial.println(recv_curtain_status);
 }
 
-// 设备控制函数
+// Device control function
 void controlDevice(){
-  if(recv_curtain_status == 1 && per_curtain_status != 1){ // 1 为开启指令
+  if(recv_curtain_status == 1 && per_curtain_status != 1){ // 1 is open command
     Serial.println("Open.");
 
     buzzerStart(100);
     controlLight(1);
 
-    // 驱动舵机
+    // Drive motor
     digitalWrite(CURTAIN_PIN1,LOW);
     digitalWrite(CURTAIN_PIN2,HIGH);
     delay(500);
@@ -214,7 +214,7 @@ void controlDevice(){
 
     digitalWrite(CURTAIN_PIN1,LOW);
     digitalWrite(CURTAIN_PIN2,LOW);
-  }else if(recv_curtain_status == 0 && per_curtain_status != 0){ // 0 为关闭指令
+  }else if(recv_curtain_status == 0 && per_curtain_status != 0){ // 0 is close command
     Serial.println("Closed");
 
     buzzerStart(100);
@@ -241,14 +241,14 @@ void showCurrSeconds(){
   oled_int_display(2,42,50,seconds,1);
 }
 
-// 触发蜂鸣器函数
+// Trigger buzzer function
 void buzzerStart(int micro_second){
-  digitalWrite(buzzerPin, HIGH); 
+  digitalWrite(buzzerPin, HIGH);
   delay(micro_second);
   digitalWrite(buzzerPin, LOW);
 }
 
-// 控制室内灯
+// Control indoor light
 void controlLight(int ifOpen){
   if(ifOpen == 1 && recv_light == 0){
     digitalWrite(LEDPIN, LOW);

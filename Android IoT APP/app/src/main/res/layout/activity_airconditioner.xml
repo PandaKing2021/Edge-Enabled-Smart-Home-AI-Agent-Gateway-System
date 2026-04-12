@@ -18,7 +18,7 @@
                 android:layout_width="200dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="空调状态:"
+                android:text="AC Status:"
                 android:textSize="30dp"
                 android:textColor="@color/black" />
 
@@ -27,7 +27,7 @@
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="关闭"
+                android:text="Off"
                 android:textSize="35dp"
                 android:textColor="@color/black" />
         </LinearLayout>
@@ -41,7 +41,7 @@
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="控制:"
+                android:text="Control:"
                 android:textSize="30dp"
                 android:textColor="@color/black" />
 
@@ -61,7 +61,7 @@
                         android:layout_width="200dp"
                         android:layout_height="120dp"
                         android:gravity="center"
-                        android:text="温度开启阈值:"
+                        android:text="Temperature Threshold:"
                         android:textSize="20dp"
                         android:textColor="@color/black" />
 
@@ -94,7 +94,7 @@
                         android:layout_width="200dp"
                         android:layout_height="120dp"
                         android:gravity="center"
-                        android:text="湿度开启阈值:"
+                        android:text="Humidity Threshold:"
                         android:textSize="20dp"
                         android:textColor="@color/black" />
 
@@ -127,13 +127,13 @@
                         android:id="@+id/light_open"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="手动开启"/>
+                        android:text="Manual Open"/>
 
                     <Button
                         android:id="@+id/light_close"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="手动关闭" />
+                        android:text="Manual Close" />
 
                 </LinearLayout>
             </LinearLayout>

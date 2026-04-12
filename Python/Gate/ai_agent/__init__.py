@@ -1,6 +1,6 @@
-"""AI Agent模块 - 对话式任务自动编排系统。
+"""AI Agent Module - Conversational Task Orchestration System.
 
-基于智谱AI GLM-4.7-Flash实现智能家居任务自动编排功能。
+Implements smart home task automatic orchestration based on Zhipu AI GLM-4.7-Flash.
 """
 
 from .dialog_manager import DialogManager

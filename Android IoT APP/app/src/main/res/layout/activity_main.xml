@@ -19,7 +19,7 @@
                 android:layout_width="280dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="智能空调"
+                android:text="Smart Air Conditioner"
                 android:textSize="45dp"
                 android:textColor="@color/black" />
 
@@ -28,7 +28,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="详情"
+                android:text="Details"
                 android:textSize="25dp" />
         </LinearLayout>
 
@@ -42,7 +42,7 @@
                 android:layout_width="280dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="智能窗帘"
+                android:text="Smart Curtain"
                 android:textSize="45dp"
                 android:textColor="@color/black" />
 
@@ -51,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="详情"
+                android:text="Details"
                 android:textSize="25dp" />
         </LinearLayout>
 
@@ -65,7 +65,7 @@
                 android:layout_width="280dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="智能门禁"
+                android:text="Smart Door Lock"
                 android:textSize="45dp"
                 android:textColor="@color/black" />
 
@@ -74,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="详情"
+                android:text="Details"
                 android:textSize="25dp" />
         </LinearLayout>
 
@@ -82,7 +82,7 @@
             android:id="@+id/to_hiatory_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="历史记录"
+            android:text="History"
             android:textSize="20dp" />
 
     </LinearLayout>

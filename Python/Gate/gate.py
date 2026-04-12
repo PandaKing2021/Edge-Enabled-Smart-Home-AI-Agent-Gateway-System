@@ -1,6 +1,6 @@
-"""IoT 智能网关主入口。
+"""IoT smart gateway main entry point.
 
-初始化配置、数据库、共享状态，并启动各通信模块的线程。
+Initialize configuration, database, shared state, and start communication module threads.
 """
 
 import logging
@@ -9,7 +9,7 @@ import sys
 import threading
 from pathlib import Path
 
-# 将项目根目录和 Gate 目录添加到 sys.path，确保模块导入正确
+# Add project root directory and Gate directory to sys.path to ensure correct module import
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _GATE_DIR = Path(__file__).resolve().parent
 
@@ -56,36 +56,36 @@ logger = logging.getLogger(__name__)
 
 
 def connect_db_server(config: GateConfig) -> socket.socket:
-    """连接到远程数据库服务器。
+    """Connect to remote database server.
 
     Args:
-        config: 网关完整配置。
+        config: Gateway complete configuration.
 
     Returns:
-        数据库服务器的 TCP 套接字。
+        Database server TCP socket.
 
     Raises:
-        ConnectionError: 连接失败。
+        ConnectionError: Connection failed.
     """
     db_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         db_socket.connect((config.db_server.ip, config.db_server.db_server_port))
-        logger.info("与数据库服务器连接成功: %s:%d",
+        logger.info("Successfully connected to database server: %s:%d",
                      config.db_server.ip, config.db_server.db_server_port)
         return db_socket
     except OSError as error:
-        logger.error("与数据库服务器连接失败: %s", error)
+        logger.error("Failed to connect to database server: %s", error)
         raise
 
 
 def check_user_config_with_server(db_socket: socket.socket, user_config: UserConfig) -> None:
-    """通过数据库服务器校验本地用户配置。
+    """Validate local user configuration through database server.
 
-    如果本地配置被非法修改，会尝试自动纠正。
+    If local configuration is illegally modified, will attempt automatic correction.
 
     Args:
-        db_socket: 数据库服务器的 TCP 套接字。
-        user_config: 本地用户配置。
+        db_socket: Database server TCP socket.
+        user_config: Local user configuration.
     """
     to_check_user = format_userdata_string(
         user_config.username, user_config.password, user_config.device_key
@@ -97,9 +97,9 @@ def check_user_config_with_server(db_socket: socket.socket, user_config: UserCon
     op, data, status_code = decode_comm_data(response)
 
     if status_code == 1:
-        logger.info("本地用户配置正常: %s", user_config.username)
+        logger.info("Local user configuration valid: %s", user_config.username)
     elif status_code == 0:
-        logger.warning("本地用户配置异常，正在检查修正...")
+        logger.warning("Local user configuration abnormal, checking for correction...")
         try:
             corr_response = recv_json(db_socket)
             _, corr_data, corr_status = decode_comm_data(corr_response)
@@ -110,24 +110,24 @@ def check_user_config_with_server(db_socket: socket.socket, user_config: UserCon
                     UserConfig(username=corr_user, password=corr_pwd, device_key=corr_key),
                     config_dir=_GATE_DIR,
                 )
-                logger.info("网关配置纠正成功，请重启网关")
+                logger.info("Gateway configuration corrected successfully, please restart gateway")
             else:
-                logger.error("用户未注册")
+                logger.error("User not registered")
         except Exception as error:
-            logger.error("配置修正过程异常: %s", error)
+            logger.error("Configuration correction process exception: %s", error)
     elif status_code == 2:
-        logger.error("数据库服务器异常，请检查连接")
+        logger.error("Database server exception, please check connection")
 
 
 def fetch_permitted_devices(db_socket: socket.socket, device_key: str) -> list:
-    """从数据库服务器获取允许的设备列表。
+    """Get permitted device list from database server.
 
     Args:
-        db_socket: 数据库服务器的 TCP 套接字。
-        device_key: 设备密钥。
+        db_socket: Database server TCP socket.
+        device_key: Device key.
 
     Returns:
-        允许的设备名称列表。
+        Permitted device name list.
     """
     send_json(db_socket, format_comm_data_string("check_device_id", device_key, 1))
 
@@ -135,58 +135,58 @@ def fetch_permitted_devices(db_socket: socket.socket, device_key: str) -> list:
     _, device_list, status_code = decode_comm_data(response)
 
     if status_code == 1:
-        # 新格式：device_list 为 JSON 数组
+        # New format: device_list is a JSON array
         if isinstance(device_list, list):
             devices = [d for d in device_list if d]
         else:
             devices = [d for d in device_list.split("+") if d]
-        logger.info("获取允许设备信息成功: %s", devices)
+        logger.info("Successfully retrieved permitted devices: %s", devices)
         return devices
     else:
-        logger.error("获取允许设备信息失败: %s", device_list)
+        logger.error("Failed to retrieve permitted devices: %s", device_list)
         return []
 
 
 def main():
-    """网关主入口函数。"""
-    # 初始化日志
+    """Gateway main entry function."""
+    # Initialize logging
     setup_logging(log_dir=_GATE_DIR)
 
-    # 加载配置
+    # Load configuration
     config = load_gate_config(config_dir=_GATE_DIR)
     user_config = load_user_config(config_dir=_GATE_DIR)
 
-    # 初始化共享状态
+    # Initialize shared state
     state = GatewayState()
     state.data_from_source = dict(DEFAULT_SENSOR_DATA)
     state.update_data(DEFAULT_THRESHOLD_DATA)
 
-    # 初始化本地数据库
+    # Initialize local database
     try:
         gate_db_conn = db_module.init_gate_database(config.gate_db)
         db_module._gate_db_conn = gate_db_conn
     except Exception as error:
-        logger.critical("本地数据库初始化失败: %s", error)
+        logger.critical("Local database initialization failed: %s", error)
         sys.exit(1)
 
-    # 连接数据库服务器
+    # Connect to database server
     try:
         db_socket = connect_db_server(config)
     except ConnectionError:
-        logger.critical("无法连接数据库服务器，网关退出")
+        logger.critical("Unable to connect to database server, gateway exiting")
         sys.exit(1)
 
-    # 校验本地用户配置
+    # Validate local user configuration
     try:
         check_user_config_with_server(db_socket, user_config)
     except Exception as error:
-        logger.error("用户配置校验失败: %s", error)
+        logger.error("User configuration validation failed: %s", error)
 
-    # 获取允许设备列表
+    # Get permitted device list
     permitted_devices = fetch_permitted_devices(db_socket, user_config.device_key)
     state.set_permitted_device(permitted_devices)
 
-    # 阿里云 IoT 配置
+    # Aliyun IoT configuration
     iot_config = AliyunIotConfig(
         product_key="k0gpoX7HaYl",
         device_name="all_devices",
@@ -194,12 +194,12 @@ def main():
         region_id="cn-shanghai",
     )
 
-    # 初始化 AI Agent 模块
-    logger.info("初始化 AI Agent 模块...")
+    # Initialize AI Agent module
+    logger.info("Initializing AI Agent module...")
     ai_agent_components = None
 
     try:
-        # 读取AI Agent配置
+        # Read AI Agent configuration
         ai_config_path = _GATE_DIR / "ai_agent_config.txt"
         ai_config = {}
         if ai_config_path.exists():
@@ -210,12 +210,12 @@ def main():
                         key, value = line.split("=", 1)
                         ai_config[key.strip()] = value.strip()
 
-        # 检查API Key是否配置
+        # Check if API Key is configured
         api_key = ai_config.get("API_KEY", "YOUR_API_KEY_HERE")
         if api_key == "YOUR_API_KEY_HERE":
-            logger.warning("AI Agent API Key 未配置,请编辑 ai_agent_config.txt 设置 API_KEY")
+            logger.warning("AI Agent API Key not configured, please edit ai_agent_config.txt to set API_KEY")
         else:
-            # 初始化AI Agent组件
+            # Initialize AI Agent components
             dialog_manager = DialogManager(
                 max_context_turns=int(ai_config.get("MAX_CONTEXT_TURNS", 5)),
                 session_timeout=int(ai_config.get("SESSION_TIMEOUT", 3600)),
@@ -233,7 +233,7 @@ def main():
                 model_name=ai_config.get("MODEL_NAME", "GLM-4.7-Flash"),
                 temperature=float(ai_config.get("TEMPERATURE", 0.7)),
                 capability_retriever=capability_retriever,
-                preference_manager=None,  # 稍后初始化
+                preference_manager=None,  # Initialize later
             )
 
             device_controller = DeviceController(state=state)
@@ -250,7 +250,7 @@ def main():
                 table_name=ai_config.get("PREFERENCE_DB_TABLE", "user_preferences"),
             )
 
-            # 更新intent_planner的preference_manager引用
+            # Update intent_planner's preference_manager reference
             intent_planner.preference_manager = preference_manager
 
             ai_agent_components = {
@@ -261,13 +261,13 @@ def main():
                 "preference_manager": preference_manager,
             }
 
-            logger.info("AI Agent 模块初始化成功")
+            logger.info("AI Agent module initialized successfully")
 
     except Exception as error:
-        logger.error("AI Agent 模块初始化失败: %s", error, exc_info=True)
-        logger.warning("AI Agent 功能将不可用")
+        logger.error("AI Agent module initialization failed: %s", error, exc_info=True)
+        logger.warning("AI Agent functionality will not be available")
 
-    # 创建 Android 通信处理器
+    # Create Android communication handler
     if ai_agent_components:
         android_ctrl = android_handler.AndroidHandler(
             db_socket,
@@ -281,7 +281,7 @@ def main():
     else:
         android_ctrl = android_handler.AndroidHandler(db_socket, config_dir=_GATE_DIR)
 
-    # 启动各通信线程
+    # Start communication threads
     threads = [
         threading.Thread(
             target=sensor_handler.sensor_handler,
@@ -309,16 +309,16 @@ def main():
 
     for t in threads:
         t.start()
-        logger.info("线程 '%s' 已启动", t.name)
+        logger.info("Thread '%s' started", t.name)
 
-    logger.info("网关就绪")
+    logger.info("Gateway ready")
 
-    # 主线程等待子线程
+    # Main thread waits for child threads
     try:
         for t in threads:
             t.join()
     except KeyboardInterrupt:
-        logger.info("网关收到退出信号，正在关闭...")
+        logger.info("Gateway received exit signal, shutting down...")
         if gate_db_conn:
             gate_db_conn.close()
         db_socket.close()

@@ -36,7 +36,7 @@ public class CurtainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_curtain);
-        setTitle("智能窗帘");
+        setTitle("Smart Curtain");
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this,"iot_db",null,1);
         db = databaseHelper.getWritableDatabase();
@@ -143,7 +143,7 @@ public class CurtainActivity extends Activity {
                     });
 
                     try {
-                        Thread.sleep(1); // 更新间隔，例如每秒更新一次
+                        Thread.sleep(1); //Update interval, e.g., update once per second
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -174,12 +174,12 @@ public class CurtainActivity extends Activity {
     private void refreshData(String info){
         JSONObject jsonObject = (JSONObject) JSON.parse(info);
 
-        // 严格对应Python网关处data_from_source中各个字典键名
+        //Strictly correspond to dictionary key names in Python gateway's data_from_source
         data[0] = jsonObject.getString("Light_CU");
         data[1] = jsonObject.getString("Brightness");
         data[2] = jsonObject.getString("Curtain_status");
 
-        // 插入历史记录数据库
+        //Insert into history database
         ContentValues values = new ContentValues();
         SimpleDateFormat format = new SimpleDateFormat("yyyy - MM - dd HH:mm:ss");
         Date time = new Date();
@@ -199,8 +199,8 @@ public class CurtainActivity extends Activity {
     }
 
     private void refreshViews(){
-        tv_switch_status_curtain.setText(data[0].equals("1")?"开启":"关闭");
-        tv_switch_status_light.setText(data[2].equals("1")?"开启":"关闭");
+        tv_switch_status_curtain.setText(data[0].equals("1")?"On":"Off");
+        tv_switch_status_light.setText(data[2].equals("1")?"On":"Off");
     }
 
 }

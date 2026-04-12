@@ -27,7 +27,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        setTitle("IoT APP"); //设置登陆页面标题
+        setTitle("IoT APP"); //Set login page title
 
         e_Given_account = (EditText)findViewById(R.id.given_account);
         e_Given_password = (EditText) findViewById(R.id.given_password);
@@ -38,7 +38,7 @@ public class LoginActivity extends AppCompatActivity {
         b_to_Reg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(LoginActivity.this,"已转到注册页面",Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this,"Navigated to Registration Page",Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(LoginActivity.this,RegisterActivity.class));
                 finish();
             }
@@ -52,9 +52,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        //增加：输入错误处理
+        //Added: Input error handling
 
-        // 单击login按钮开启线程
+        //Click login button to start thread
         b_Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -78,11 +78,11 @@ public class LoginActivity extends AppCompatActivity {
             super.handleMessage(message);
             int state = message.getData().getInt("state");
             if (state == 1) {
-                Toast.makeText(LoginActivity.this, "登录成功！", Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_LONG).show();
                 startActivity(new Intent(LoginActivity.this,MainActivity.class));
                 finish();
             } else if (state == 0) {
-                Toast.makeText(LoginActivity.this, "登录失败！", Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, "Login Failed!", Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -91,17 +91,17 @@ public class LoginActivity extends AppCompatActivity {
     protected int login() {
         int state = 0;
         try {
-            // 读取assets文件夹下的用户配置文件键值对
+            //Read user config file key-value pairs in assets folder
             Properties properties = new Properties();
             properties.load(getAssets().open("config.properties"));
             String ip = properties.getProperty("ip");
             int port = Integer.parseInt(properties.getProperty("port"));
 
-            // 从用户输入框内获取输入值
+            //Get input values from user input fields
             String given_account = e_Given_account.getText().toString();
             String given_password = e_Given_password.getText().toString();
 
-            // 遵循通信格式： 指令码|数据码|状态码
+            //Follow communication format: opcode|data|status
             // String log_data = "login|" + JSON.toJSONString(new UserBean(given_account, given_password, "NULL")) + "|1";
             MyComm myComm = new MyComm();
             String log_data = myComm.format_comm_data("login", JSON.toJSONString(new UserBean(given_account, given_password, "NULL")), "1");

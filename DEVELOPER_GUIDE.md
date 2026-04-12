@@ -1,182 +1,186 @@
-# IoT 智能网关系统 - 开发者文档
+# IoT Smart Gateway System - Developer Documentation
 
-**版本**: v1.0  
-**更新日期**: 2026年4月6日  
-**适用范围**: 边缘计算物联网网关系统
-
----
-
-## 目录
-
-1. [系统架构概述](#1-系统架构概述)
-2. [三端交互说明](#2-三端交互说明)
-3. [网络端口配置](#3-网络端口配置)
-4. [通信协议详解](#4-通信协议详解)
-5. [数据格式与数据码](#5-数据格式与数据码)
-6. [数据库服务器](#6-数据库服务器)
-7. [启动方式](#7-启动方式)
-8. [AI Agent 与 LLM 技术](#8-ai-agent--llm-技术)
-9. [开发指南](#9-开发指南)
-10. [API参考](#10-api参考)
-11. [故障排查](#11-故障排查)
-12. [附录](#12-附录)
+**Version**: v1.0  
+**Update Date**: April 6, 2026  
+**Scope**: Edge Computing IoT Gateway System
 
 ---
 
-## 1. 系统架构概述
+## Table of Contents
 
-### 1.1 系统组成
+1. [System Architecture Overview](#1-system-architecture-overview)
+2. [Three-Tier Interaction Description](#2-three-tier-interaction-description)
+3. [Network Port Configuration](#3-network-port-configuration)
+4. [Communication Protocol Details](#4-communication-protocol-details)
+5. [Data Format and Data Codes](#5-data-format-and-data-codes)
+6. [Database Server](#6-database-server)
+7. [Startup Methods](#7-startup-methods)
+8. [AI Agent and LLM Technology](#8-ai-agent-and-llm-technology)
+9. [Development Guide](#9-development-guide)
+10. [API Reference](#10-api-reference)
+11. [Troubleshooting](#11-troubleshooting)
+12. [Appendix](#12-appendix)
 
-IoT智能网关系统由三个主要端组成：
+---
+
+## 1. System Architecture Overview
+
+### 1.1 System Components
+
+The IoT smart gateway system consists of three main tiers:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     IoT智能网关系统架构                        │
+│               IoT Smart Gateway System Architecture         │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌─────────────┐         ┌──────────────┐         ┌────────┐ │
-│  │  Android端  │◄────────┤   边缘网关端  │─────────►│ 设备端 │ │
-│  │  (移动应用)  │  TCP    │   (Python)    │   TCP    │ (ESP)  │ │
+│  │ Android End │◄────────┤ Edge Gateway  │─────────►│ Device │ │
+│  │ (Mobile App)│  TCP    │   (Python)    │   TCP    │ (ESP)  │ │
 │  └─────────────┘         └──────────────┘         └────────┘ │
 │         │                        │                       │    │
 │         │                        │                       │    │
 │         ▼                        ▼                       ▼    │
-│  用户界面控制            数据处理与转发           传感器采集 │
-│  阈值设置               智能决策逻辑           设备控制   │
-│  数据可视化             数据存储               状态上报   │
+│  User Interface          Data Processing and          Sensor  │
+│  Control                 Forwarding                   Data    │
+│  Threshold Settings      Intelligent Decision         Device  │
+│  Data Visualization      Data Storage                 Status  │
+│                          Reporting                     Control │
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │              外部服务                                │  │
+│  │              External Services                        │  │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │  │
-│  │  │   MySQL     │  │  阿里云IoT  │  │  数据库服务器│  │  │
-│  │  │   本地DB    │  │   MQTT     │  │  (远程MySQL) │  │  │
+│  │  │   MySQL     │  │  Aliyun IoT │  │   Database  │  │  │
+│  │  │   Local DB  │  │    MQTT     │  │   Server    │  │  │
 │  │  └─────────────┘  └─────────────┘  └─────────────┘  │  │
 │  └──────────────────────────────────────────────────────┘  │
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 各端职责
+### 1.2 Tier Responsibilities
 
-#### Android端 (移动应用)
-- **职责**:
-  - 用户登录和注册
-  - 实时显示传感器数据
-  - 发送控制指令到网关
-  - 设置传感器阈值
-  - 控制设备开关状态
-- **技术栈**: Android (Java/Kotlin)
-- **配置文件**: `app/src/main/assets/config.properties`
+#### Android End (Mobile Application)
+- **Responsibilities**:
+  - User login and registration
+  - Real-time display of sensor data
+  - Send control commands to gateway
+  - Set sensor thresholds
+  - Control device on/off status
+- **Tech Stack**: Android (Java/Kotlin)
+- **Configuration File**: `app/src/main/assets/config.properties`
 
-#### 边缘网关端 (Python)
-- **职责**:
-  - 管理设备连接和身份验证
-  - 接收传感器数据并存储
-  - 执行智能决策逻辑
-  - 转发控制指令到设备
-  - 推送数据到Android和阿里云IoT
-  - 与数据库服务器通信
-- **技术栈**: Python 3.x
-- **主要模块**: 
-  - `gate.py` / `gate_test.py` (主程序)
-  - `sensor_handler.py` (设备通信)
-  - `android_handler.py` (Android通信)
-  - `aliyun_handler.py` (阿里云IoT通信)
-  - `database.py` (本地数据库操作)
+#### Edge Gateway End (Python)
+- **Responsibilities**:
+  - Manage device connections and authentication
+  - Receive sensor data and store it
+  - Execute intelligent decision logic
+  - Forward control commands to devices
+  - Push data to Android and Aliyun IoT
+  - Communicate with database server
+- **Tech Stack**: Python 3.x
+- **Main Modules**:
+  - `gate.py` / `gate_test.py` (Main program)
+  - `sensor_handler.py` (Device communication)
+  - `android_handler.py` (Android communication)
+  - `aliyun_handler.py` (Aliyun IoT communication)
+  - `database.py` (Local database operations)
 
-#### 设备端 (ESP8266)
-- **职责**:
-  - 采集传感器数据（温湿度、光照等）
-  - 发送数据到网关
-  - 接收控制指令
-  - 执行设备控制（LED、继电器等）
-- **技术栈**: Arduino C++ (ESP8266)
-- **设备类型**:
-  - `A1_tem_hum` - 智能空调单元
-  - `A1_curtain` - 智能窗帘单元
-  - `A1_security` - 门禁安全单元
+#### Device End (ESP8266)
+- **Responsibilities**:
+  - Collect sensor data (temperature/humidity, light, etc.)
+  - Send data to gateway
+  - Receive control commands
+  - Execute device control (LED, relay, etc.)
+- **Tech Stack**: Arduino C++ (ESP8266)
+- **Device Types**:
+  - `A1_tem_hum` - Smart Air Conditioner Unit
+  - `A1_curtain` - Smart Curtain Unit
+  - `A1_security` - Door Access Security Unit
 
-### 1.3 数据流向
+### 1.3 Data Flow
 
 ```
 ┌─────────┐
-│ 设备端  │
+│ Device  │
 │ ESP8266 │
 └────┬────┘
      │ TCP:9300
-     │ 1. 发送设备ID
-     │ 2. 接收"start"响应
-     │ 3. 发送传感器数据 (每3秒)
-     │ 4. 接收控制指令 (每3秒)
+     │ 1. Send device ID
+     │ 2. Receive "start" response
+     │ 3. Send sensor data (every 3 seconds)
+     │ 4. Receive control commands (every 3 seconds)
      ▼
 ┌──────────────┐
-│  边缘网关端   │
+│ Edge Gateway │
 │   Python     │
 └────┬───────┬─┘
      │       │
      │       │ TCP:9301
-     │       │ 1. 发送登录请求
-     │       │ 2. 接收登录响应
-     │       │ 3. 接收传感器数据 (每2秒)
-     │       │ 4. 发送控制指令
+     │       │ 1. Send login request
+     │       │ 2. Receive login response
+     │       │ 3. Receive sensor data (every 2 seconds)
+     │       │ 4. Send control commands
      │       ▼
      │   ┌─────────┐
-     │   │Android端│
+     │   │Android │
      │   └─────────┘
      │
-     │ MySQL (本地存储)
-     │ MQTT (阿里云IoT)
-     │ TCP:9302 (数据库服务器)
+     │ MySQL (Local storage)
+     │ MQTT (Aliyun IoT)
+     │ TCP:9302 (Database server)
      ▼
 ┌──────────────────┐
-│   外部服务层     │
+│  External Service│
+│      Layer       │
 └──────────────────┘
 ```
 
 ---
 
-## 2. 三端交互说明
+## 2. Three-Tier Interaction Description
 
-### 2.1 设备端 → 网关端
+### 2.1 Device End → Gateway End
 
-#### 连接建立流程
+#### Connection Establishment Process
 
 ```
-设备端 (ESP8266)                    网关端 (Python)
+Device End (ESP8266)                Gateway End (Python)
       │                                  │
-      │  1. TCP连接请求                  │
+      │  1. TCP connection request      │
       │─────────────────────────────────►│
       │                                  │
-      │  2. 发送设备ID + "\n"           │
+      │  2. Send device ID + "\n"       │
       │─────────────────────────────────►│
       │   "A1_tem_hum\n"                 │
-      │                                  │  3. 验证设备权限
-      │                                  │  (检查允许设备列表)
+      │                                  │  3. Verify device permission
+      │                                  │  (Check allowed device list)
       │                                  │
-      │  4. 接收响应 + "\n"              │
+      │  4. Receive response + "\n"      │
       │◄─────────────────────────────────│
-      │   "start\n"                      │  设备已授权，开始通信
+      │   "start\n"                      │  Device authorized, start communication
       │                                  │
-      │  5. 启动双向通信                  │
-      │    - 发送传感器数据 (每3秒)      │
-      │    - 接收控制指令 (每3秒)        │
+      │  5. Start bidirectional         │
+      │     communication                │
+      │    - Send sensor data (every 3s) │
+      │    - Receive control commands (every 3s)│
 ```
 
-#### 设备ID验证规则
+#### Device ID Verification Rules
 
-- **验证条件**: 设备ID必须在允许设备列表中
-- **允许设备列表**: 从数据库服务器获取（测试模式使用默认列表）
-- **默认设备列表**: `["A1_tem_hum", "A1_curtain", "A1_security"]`
-- **验证结果**:
-  - ✅ 通过: 发送 `"start\n"`，启动双向通信
-  - ❌ 失败: 关闭连接，拒绝服务
+- **Verification Condition**: Device ID must be in the allowed device list
+- **Allowed Device List**: Retrieved from database server (default list used in test mode)
+- **Default Device List**: `["A1_tem_hum", "A1_curtain", "A1_security"]`
+- **Verification Result**:
+  - ✅ Pass: Send `"start\n"`, start bidirectional communication
+  - ❌ Fail: Close connection, refuse service
 
-#### 传感器数据发送
+#### Sensor Data Sending
 
-**发送频率**: 每3秒 (可配置)  
-**数据格式**: JSON对象 + "\n"
+**Sending Frequency**: Every 3 seconds (configurable)  
+**Data Format**: JSON object + "\n"
 
-**示例数据**:
+**Example Data**:
 ```json
 {
   "device_id": "A1_tem_hum",
@@ -189,23 +193,23 @@ IoT智能网关系统由三个主要端组成：
 }
 ```
 
-**数据字段说明**:
-| 字段名 | 类型 | 说明 | 范围 |
-|--------|------|------|------|
-| device_id | string | 设备唯一标识 | - |
-| Light_TH | int | 空调灯光状态 | 0=关, 1=开 |
-| Temperature | float | 温度值 | 0.0-100.0 |
-| Humidity | float | 湿度值 | 0.0-100.0 |
-| Light_CU | int | 光感灯状态 | 0=关, 1=开 |
-| Brightness | float | 光照度 | 0.0-65535.0 |
-| Curtain_status | int | 窗帘状态 | 0=关, 1=开 |
+**Data Field Description**:
+| Field Name | Type | Description | Range |
+|------------|------|-------------|-------|
+| device_id | string | Device unique identifier | - |
+| Light_TH | int | AC light status | 0=off, 1=on |
+| Temperature | float | Temperature value | 0.0-100.0 |
+| Humidity | float | Humidity value | 0.0-100.0 |
+| Light_CU | int | Light sensor status | 0=off, 1=on |
+| Brightness | float | Light intensity | 0.0-65535.0 |
+| Curtain_status | int | Curtain status | 0=off, 1=on |
 
-#### 控制指令接收
+#### Control Command Reception
 
-**接收频率**: 每3秒 (可配置)  
-**数据格式**: JSON对象 + "\n"
+**Receiving Frequency**: Every 3 seconds (configurable)  
+**Data Format**: JSON object + "\n"
 
-**示例数据**:
+**Example Data**:
 ```json
 {
   "Light_TH": 1,
@@ -217,24 +221,24 @@ IoT智能网关系统由三个主要端组成：
 }
 ```
 
-**设备响应**: 
-- 解析JSON数据
-- 更新本地控制变量
-- 执行设备控制（如LED开关）
+**Device Response**:
+- Parse JSON data
+- Update local control variables
+- Execute device control (such as LED on/off)
 
 ---
 
-### 2.2 Android端 → 网关端
+### 2.2 Android End → Gateway End
 
-#### 连接建立流程
+#### Connection Establishment Process
 
 ```
-Android端                          网关端
+Android End                        Gateway End
      │                                  │
-     │  1. TCP连接请求                  │
+     │  1. TCP connection request      │
      │─────────────────────────────────►│
      │                                  │
-     │  2. 发送登录请求 (JSON)          │
+     │  2. Send login request (JSON)    │
      │─────────────────────────────────►│
      │   {                              │
      │     "op": "login",               │
@@ -245,95 +249,95 @@ Android端                          网关端
      │     },                           │
      │     "status": "1"                │
      │   }                              │
-     │                                  │  3. 验证用户凭证
-     │                                  │  (检查UserConfig.txt)
+     │                                  │  3. Verify user credentials
+     │                                  │  (Check UserConfig.txt)
      │                                  │
-     │  4. 接收登录响应 (JSON)          │
+     │  4. Receive login response (JSON)│
      │◄─────────────────────────────────│
-     │   {                              │  登录成功
+     │   {                              │  Login successful
      │     "status": 1                  │  status=1
      │   }                              │
      │                                  │
-     │  5. 等待设备连接                  │
-     │  (等待sensor_data可用)           │
-     │                                  │  6. 启动双向通信
-     │  7. 接收传感器数据 (每2秒)        │
+     │  5. Wait for device connection   │
+     │  (Wait for sensor_data available)│
+     │                                  │  6. Start bidirectional
+     │  7. Receive sensor data (every 2s)│  communication
      │◄─────────────────────────────────│
-     │                                  │  推送数据快照
-     │  8. 发送控制指令                  │
+     │                                  │  Push data snapshot
+     │  8. Send control command         │
      │─────────────────────────────────►│
      │   {                              │
      │     "op": "light_th_open",       │
      │     "data": "1",                 │
      │     "status": "1"                │
      │   }                              │
-     │                                  │  9. 更新阈值数据
-     │                                  │  10. 推送新阈值到设备
+     │                                  │  9. Update threshold data
+     │                                  │  10. Push new threshold to device
 ```
 
-#### 用户登录
+#### User Login
 
-**请求格式**:
+**Request Format**:
 ```json
 {
   "op": "login",
   "data": {
-    "account": "用户名",
-    "password": "密码",
-    "device_Key": "设备密钥"
+    "account": "username",
+    "password": "password",
+    "device_Key": "device_key"
   },
   "status": "1"
 }
 ```
 
-**响应格式**:
+**Response Format**:
 ```json
 {
   "status": 1
 }
 ```
 
-**响应码**:
-| status | 说明 |
-|--------|------|
-| 1 | 登录成功 |
-| 0 | 登录失败（用户名或密码错误） |
+**Response Code**:
+| status | Description |
+|--------|-------------|
+| 1 | Login successful |
+| 0 | Login failed (incorrect username or password) |
 
-#### 用户注册
+#### User Registration
 
-**请求格式**:
+**Request Format**:
 ```json
 {
   "op": "register",
   "data": {
-    "account": "用户名",
-    "password": "密码",
-    "device_Key": "设备密钥"
+    "account": "username",
+    "password": "password",
+    "device_Key": "device_key"
   },
   "status": "1"
 }
 ```
 
-**响应格式**:
+**Response Format**:
 ```json
 {
   "status": 1
 }
 ```
 
-**注册流程**:
-1. 网关接收注册请求
-2. 转发到数据库服务器
-3. 数据库服务器创建用户记录
-4. 网关更新本地UserConfig.txt
-5. 返回响应给Android
+**Registration Process**:
+1. Gateway receives registration request
+2. Forward to database server
+3. Database server creates user record
+4. Gateway updates local UserConfig.txt
+5. Return response to Android
 
-#### 传感器数据接收
+#### Sensor Data Reception
 
-**接收频率**: 每2秒 (可配置)  
-**数据格式**: JSON对象 + "\n"
+**Receiving Frequency**: Every 2 seconds (configurable)  
+**Data Format**: JSON object + "\n"
 
-**示例数据**:
+**Example Data**:
 ```json
 {
   "Light_TH": 0,
@@ -345,59 +349,59 @@ Android端                          网关端
 }
 ```
 
-**Android端处理**:
-- 解析JSON数据
-- 更新UI显示
-- 绘制实时图表
-- 显示设备状态
+**Android End Processing**:
+- Parse JSON data
+- Update UI display
+- Draw real-time charts
+- Display device status
 
-#### 控制指令发送
+#### Control Command Sending
 
-**指令格式**:
+**Command Format**:
 ```json
 {
-  "op": "操作码",
-  "data": "数据值",
+  "op": "operation_code",
+  "data": "data_value",
   "status": "1"
 }
 ```
 
-**支持的指令**:
-| 操作码 | 数据值 | 说明 |
-|--------|--------|------|
-| light_th_open | "1" | 打开智能空调 |
-| light_th_close | "1" | 关闭智能空调 |
-| change_temperature_threshold | "28" | 修改温度阈值 |
-| change_humidity_threshold | "60" | 修改湿度阈值 |
-| curtain_open | "1" | 打开窗帘 |
-| curtain_close | "1" | 关闭窗帘 |
-| change_brightness_threshold | "500" | 修改光照度阈值 |
+**Supported Commands**:
+| Operation Code | Data Value | Description |
+|----------------|------------|-------------|
+| light_th_open | "1" | Turn on smart AC |
+| light_th_close | "1" | Turn off smart AC |
+| change_temperature_threshold | "28" | Modify temperature threshold |
+| change_humidity_threshold | "60" | Modify humidity threshold |
+| curtain_open | "1" | Open curtain |
+| curtain_close | "1" | Close curtain |
+| change_brightness_threshold | "500" | Modify brightness threshold |
 
 ---
 
-### 2.3 网关端 → 数据库服务器
+### 2.3 Gateway End → Database Server
 
-#### 连接建立流程
+#### Connection Establishment Process
 
 ```
-网关端                        数据库服务器
+Gateway End                     Database Server
      │                                  │
-     │  1. TCP连接请求 (端口9302)       │
+     │  1. TCP connection request (port 9302)│
      │─────────────────────────────────►│
      │                                  │
-     │  2. 连接成功                      │
+     │  2. Connection successful        │
      │                                  │
-     │  3. 发送请求 (JSON)              │
+     │  3. Send request (JSON)          │
      │─────────────────────────────────►│
      │   {                              │
      │     "op": "check_device_id",     │
      │     "data": "A1",                │
      │     "status": 1                  │
      │   }                              │
-     │                                  │  4. 处理请求
-     │                                  │  (查询数据库)
+     │                                  │  4. Process request
+     │                                  │  (Query database)
      │                                  │
-     │  5. 接收响应 (JSON)              │
+     │  5. Receive response (JSON)      │
      │◄─────────────────────────────────│
      │   {                              │
      │     "op": "check_device_id",     │
@@ -406,47 +410,47 @@ Android端                          网关端
      │   }                              │
 ```
 
-#### 支持的操作
+#### Supported Operations
 
-| 操作码 | 说明 | 请求数据 | 响应数据 |
-|--------|------|----------|----------|
-| check_device_id | 获取允许设备列表 | device_key | 设备ID数组 |
-| check_userconfig_illegal | 检查用户配置 | {"username":...} | 修正后的用户信息 |
-| add_new_user | 添加新用户 | {"username":...} | status: 1=成功, 0=失败, 2=错误 |
+| Operation Code | Description | Request Data | Response Data |
+|----------------|-------------|--------------|---------------|
+| check_device_id | Get allowed device list | device_key | Device ID array |
+| check_userconfig_illegal | Check user configuration | {"username":...} | Corrected user information |
+| add_new_user | Add new user | {"username":...} | status: 1=success, 0=fail, 2=error |
 
 ---
 
-## 3. 网络端口配置
+## 3. Network Port Configuration
 
-### 3.1 端口分配表
+### 3.1 Port Allocation Table
 
-| 端口 | 用途 | 协议 | 说明 |
-|------|------|------|------|
-| **9300** | 设备通信端口 | TCP | ESP8266设备连接 |
-| **9301** | Android通信端口 | TCP | Android应用连接 |
-| **9302** | 数据库服务器端口 | TCP | 数据库服务器通信 |
-| **1883** | 阿里云IoT MQTT | TCP | MQTT协议通信 |
-| **3306** | MySQL数据库 | TCP | 本地数据库 |
+| Port | Purpose | Protocol | Description |
+|------|---------|----------|-------------|
+| **9300** | Device Communication Port | TCP | ESP8266 device connection |
+| **9301** | Android Communication Port | TCP | Android application connection |
+| **9302** | Database Server Port | TCP | Database server communication |
+| **1883** | Aliyun IoT MQTT | TCP | MQTT protocol communication |
+| **3306** | MySQL Database | TCP | Local database |
 
-### 3.2 配置文件
+### 3.2 Configuration Files
 
-#### 网关配置文件 (GateConfig.txt)
+#### Gateway Configuration File (GateConfig.txt)
 
-**位置**: `Python/Gate/GateConfig.txt`  
-**格式**: 纯文本，每行一个配置项
+**Location**: `Python/Gate/GateConfig.txt`  
+**Format**: Plain text, one configuration item per line
 
 ```
-网关IP
-数据库服务器IP
-设备端口
-Android端口
-数据库服务器端口
-MySQL用户名
-MySQL密码
-数据库名
+Gateway IP
+Database server IP
+Device port
+Android port
+Database server port
+MySQL username
+MySQL password
+Database name
 ```
 
-**示例**:
+**Example**:
 ```
 192.168.1.107
 192.168.1.107
@@ -458,38 +462,38 @@ root
 gate_database
 ```
 
-#### 用户配置文件 (UserConfig.txt)
+#### User Configuration File (UserConfig.txt)
 
-**位置**: `Python/Gate/UserConfig.txt`  
-**格式**: 纯文本，每行一个配置项
+**Location**: `Python/Gate/UserConfig.txt`  
+**Format**: Plain text, one configuration item per line
 
 ```
-用户名
-密码
-设备密钥
+Username
+Password
+Device key
 ```
 
-**示例**:
+**Example**:
 ```
 Jiang
 pwd
 A1
 ```
 
-#### Android配置文件 (config.properties)
+#### Android Configuration File (config.properties)
 
-**位置**: `Android IoT APP/app/src/main/assets/config.properties`  
-**格式**: key=value 格式
+**Location**: `Android IoT APP/app/src/main/assets/config.properties`  
+**Format**: key=value format
 
 ```properties
 ip = 192.168.1.107
 port = 9301
 ```
 
-#### 设备配置文件 (config.h)
+#### Device Configuration File (config.h)
 
-**位置**: `Device Unit code/*/config.h`  
-**格式**: C++ 宏定义
+**Location**: `Device Unit code/*/config.h`  
+**Format**: C++ macro definitions
 
 ```cpp
 #define DEVICE_ID "A1_tem_hum"
@@ -499,13 +503,13 @@ port = 9301
 #define WIFI_PASSWORD "your_wifi_password"
 ```
 
-### 3.3 配置生成工具
+### 3.3 Configuration Generation Tool
 
-**工具**: `Python/scripts/generate_device_config.py`
+**Tool**: `Python/scripts/generate_device_config.py`
 
-**用途**: 自动生成设备配置文件
+**Purpose**: Automatically generate device configuration files
 
-**使用方法**:
+**Usage**:
 ```bash
 cd "d:\projects\ai_generate\edge computing home"
 python Python/scripts/generate_device_config.py
@@ -513,24 +517,24 @@ python Python/scripts/generate_device_config.py
 
 ---
 
-## 4. 通信协议详解
+## 4. Communication Protocol Details
 
-### 4.1 协议概述
+### 4.1 Protocol Overview
 
-所有TCP通信统一使用 **JSON格式**，消息以 **`\n` (LF)** 作为分隔符。
+All TCP communications use **JSON format** uniformly, with messages separated by **`\n` (LF)**.
 
-#### 消息格式
+#### Message Format
 
-**类型1: 命令/响应类消息**
+**Type 1: Command/Response Messages**
 ```json
 {
-  "op": "操作码",
-  "data": "数据载荷",
-  "status": "状态码"
+  "op": "operation_code",
+  "data": "data_payload",
+  "status": "status_code"
 }
 ```
 
-**类型2: 数据流推送类消息**
+**Type 2: Data Stream Push Messages**
 ```json
 {
   "field1": "value1",
@@ -539,69 +543,69 @@ python Python/scripts/generate_device_config.py
 }
 ```
 
-### 4.2 消息终止符
+### 4.2 Message Terminator
 
-**终止符**: `\n` (Line Feed, ASCII 10)  
-**作用**: 分隔独立的消息  
-**处理方式**: 
-- 发送时自动追加 `\n`
-- 接收时读取到 `\n` 为止
+**Terminator**: `\n` (Line Feed, ASCII 10)  
+**Purpose**: Separate independent messages  
+**Processing**:
+- Automatically append `\n` when sending
+- Read until `\n` when receiving
 
-### 4.3 JSON编码规范
+### 4.3 JSON Encoding Standards
 
-#### 字符编码
-- **编码格式**: UTF-8
-- **中文字符**: 允许，使用 `ensure_ascii=False` 序列化
+#### Character Encoding
+- **Encoding Format**: UTF-8
+- **Chinese Characters**: Allowed, use `ensure_ascii=False` for serialization
 
-#### 数据类型映射
+#### Data Type Mapping
 
-| JSON类型 | Python类型 | 说明 |
-|----------|------------|------|
-| string | str | 文本字符串 |
-| number | int/float | 数值 |
-| boolean | bool | 布尔值 |
-| array | list | 数组 |
-| object | dict | 对象 |
+| JSON Type | Python Type | Description |
+|-----------|-------------|-------------|
+| string | str | Text string |
+| number | int/float | Numeric value |
+| boolean | bool | Boolean value |
+| array | list | Array |
+| object | dict | Object |
 
-### 4.4 通信函数库
+### 4.4 Communication Function Library
 
-#### Python端 (common/protocol.py)
+#### Python End (common/protocol.py)
 
-**发送JSON数据**:
+**Send JSON Data**:
 ```python
 from common.protocol import send_json
 
 send_json(socket, {"key": "value"})
-# 实际发送: {"key": "value"}\n
+# Actually sends: {"key": "value"}\n
 ```
 
-**接收JSON数据**:
+**Receive JSON Data**:
 ```python
 from common.protocol import recv_json
 
 data = recv_json(socket)
-# 返回: {"key": "value"}
+# Returns: {"key": "value"}
 ```
 
-**发送文本行**:
+**Send Text Line**:
 ```python
 from common.protocol import send_line
 
 send_line(socket, "start")
-# 实际发送: start\n
+# Actually sends: start\n
 ```
 
-**接收文本行**:
+**Receive Text Line**:
 ```python
 from common.protocol import recv_line
 
 line = recv_line(socket)
-# 返回: "start"
+# Returns: "start"
 ```
 
-#### 设备端 (ESP8266)
+#### Device End (ESP8266)
 
-**发送JSON数据**:
+**Send JSON Data**:
 ```cpp
 #include <ArduinoJson.h>
 
@@ -611,10 +615,10 @@ doc["Temperature"] = 25.5;
 
 String jsonStr;
 serializeJson(doc, jsonStr);
-client.println(jsonStr);  // 自动追加 \n
+client.println(jsonStr);  // Automatically appends \n
 ```
 
-**接收JSON数据**:
+**Receive JSON Data**:
 ```cpp
 StaticJsonDocument<200> doc;
 String jsonStr = client.readStringUntil('\n');
@@ -623,9 +627,9 @@ deserializeJson(doc, jsonStr);
 int temperature = doc["Temperature"];
 ```
 
-#### Android端 (Java)
+#### Android End (Java)
 
-**发送JSON数据**:
+**Send JSON Data**:
 ```java
 JSONObject json = new JSONObject();
 json.put("op", "login");
@@ -635,10 +639,10 @@ String jsonString = json.toString();
 outputStream.write((jsonString + "\n").getBytes());
 ```
 
-**接收JSON数据**:
+**Receive JSON Data**:
 ```java
 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-String line = reader.readLine();  // 读取到 \n
+String line = reader.readLine();  // Read until \n
 
 JSONObject json = new JSONObject(line);
 String status = json.getString("status");
@@ -646,82 +650,82 @@ String status = json.getString("status");
 
 ---
 
-## 5. 数据格式与数据码
+## 5. Data Format and Data Codes
 
-### 5.1 操作码 (op) 列表
+### 5.1 Operation Codes (op) List
 
-#### Android → 网关
+#### Android → Gateway
 
-| 操作码 | 用途 | data类型 | status |
-|--------|------|----------|--------|
-| login | 用户登录 | JSONObject | "1" |
-| register | 用户注册 | JSONObject | "1" |
-| light_th_open | 打开空调 | "1" | "1" |
-| light_th_close | 关闭空调 | "1" | "1" |
-| change_temperature_threshold | 修改温度阈值 | "28" | "1" |
-| change_humidity_threshold | 修改湿度阈值 | "60" | "1" |
-| curtain_open | 打开窗帘 | "1" | "1" |
-| curtain_close | 关闭窗帘 | "1" | "1" |
-| change_brightness_threshold | 修改光照阈值 | "500" | "1" |
+| Operation Code | Purpose | data Type | status |
+|----------------|---------|-----------|--------|
+| login | User login | JSONObject | "1" |
+| register | User registration | JSONObject | "1" |
+| light_th_open | Turn on AC | "1" | "1" |
+| light_th_close | Turn off AC | "1" | "1" |
+| change_temperature_threshold | Modify temperature threshold | "28" | "1" |
+| change_humidity_threshold | Modify humidity threshold | "60" | "1" |
+| curtain_open | Open curtain | "1" | "1" |
+| curtain_close | Close curtain | "1" | "1" |
+| change_brightness_threshold | Modify brightness threshold | "500" | "1" |
 
-#### 网关 → 数据库服务器
+#### Gateway → Database Server
 
-| 操作码 | 用途 | data类型 | status |
-|--------|------|----------|--------|
-| check_device_id | 获取允许设备列表 | "A1" | 1 |
-| check_userconfig_illegal | 检查用户配置 | JSONObject | 1 |
-| add_new_user | 添加新用户 | JSONObject | 1 |
+| Operation Code | Purpose | data Type | status |
+|----------------|---------|-----------|--------|
+| check_device_id | Get allowed device list | "A1" | 1 |
+| check_userconfig_illegal | Check user configuration | JSONObject | 1 |
+| add_new_user | Add new user | JSONObject | 1 |
 
-### 5.2 数据字段说明
+### 5.2 Data Field Description
 
-#### 传感器数据字段
+#### Sensor Data Fields
 
-| 字段名 | 类型 | 说明 | 默认值 | 范围 |
-|--------|------|------|--------|------|
-| Light_TH | int | 智能空调灯光状态 | 0 | 0=关, 1=开 |
-| Temperature | float | 温度值 | 0.0 | 0.0-100.0 (°C) |
-| Humidity | float | 湿度值 | 0.0 | 0.0-100.0 (%) |
-| Light_CU | int | 光感灯状态 | 0 | 0=关, 1=开 |
-| Brightness | float | 光照度 | 0.0 | 0.0-65535.0 |
-| Curtain_status | int | 窗帘状态 | 1 | 0=关, 1=开 |
+| Field Name | Type | Description | Default | Range |
+|------------|------|-------------|---------|-------|
+| Light_TH | int | Smart AC light status | 0 | 0=off, 1=on |
+| Temperature | float | Temperature value | 0.0 | 0.0-100.0 (°C) |
+| Humidity | float | Humidity value | 0.0 | 0.0-100.0 (%) |
+| Light_CU | int | Light sensor status | 0 | 0=off, 1=on |
+| Brightness | float | Light intensity | 0.0 | 0.0-65535.0 |
+| Curtain_status | int | Curtain status | 1 | 0=off, 1=on |
 
-#### 门禁数据字段
+#### Door Access Data Fields
 
-| 字段名 | 类型 | 说明 | 默认值 | 范围 |
-|--------|------|------|--------|------|
-| Door_Security_Status | int | 门禁状态 | 0 | 0=未通过, 1=已通过 |
-| Door_Secur_Card_id | string | 卡片ID | "" | - |
+| Field Name | Type | Description | Default | Range |
+|------------|------|-------------|---------|-------|
+| Door_Security_Status | int | Door access status | 0 | 0=denied, 1=granted |
+| Door_Secur_Card_id | string | Card ID | "" | - |
 
-#### 阈值数据字段
+#### Threshold Data Fields
 
-| 字段名 | 类型 | 说明 | 默认值 | 特殊值 |
-|--------|------|------|--------|--------|
-| Temperature | float | 温度阈值 | 30.0 | -1=不限制 |
-| Humidity | float | 湿度阈值 | 65.0 | -1=不限制 |
-| Brightness | float | 光照度阈值 | 500.0 | -2=不限制, 65535=不触发 |
+| Field Name | Type | Description | Default | Special Values |
+|------------|------|-------------|---------|----------------|
+| Temperature | float | Temperature threshold | 30.0 | -1=no limit |
+| Humidity | float | Humidity threshold | 65.0 | -1=no limit |
+| Brightness | float | Light intensity threshold | 500.0 | -2=no limit, 65535=never trigger |
 
-### 5.3 状态码 (status) 说明
+### 5.3 Status Codes Description
 
-#### 通用状态码
+#### General Status Codes
 
-| 值 | 说明 | 使用场景 |
-|----|------|----------|
-| 0 | 失败 | 登录失败、注册失败、数据格式错误 |
-| 1 | 成功 | 操作成功、数据正确 |
-| 2 | 错误 | 数据库服务器错误、异常情况 |
+| Value | Description | Usage Scenario |
+|-------|-------------|----------------|
+| 0 | Failed | Login failed, registration failed, data format error |
+| 1 | Successful | Operation successful, data correct |
+| 2 | Error | Database server error, exception |
 
-#### 门禁状态码
+#### Door Access Status Codes
 
-| 值 | 说明 | 常量 |
-|----|------|------|
-| 0 | 未通过 | `DOOR_DENIED` |
-| 1 | 已通过 | `DOOR_GRANTED` |
+| Value | Description | Constant |
+|-------|-------------|----------|
+| 0 | Denied | `DOOR_DENIED` |
+| 1 | Granted | `DOOR_GRANTED` |
 
-### 5.4 数据示例
+### 5.4 Data Examples
 
-#### 登录请求示例
+#### Login Request Example
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "login",
@@ -734,16 +738,16 @@ String status = json.getString("status");
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "status": 1
 }
 ```
 
-#### 传感器数据示例
+#### Sensor Data Example
 
-**设备发送**:
+**Device Sends**:
 ```json
 {
   "device_id": "A1_tem_hum",
@@ -756,7 +760,7 @@ String status = json.getString("status");
 }
 ```
 
-**网关存储** (MySQL):
+**Gateway Stores** (MySQL):
 ```sql
 INSERT INTO gate_local_data 
 (timestamp, light_th, temperature, humidity, light_cu, brightness, curtain_status)
@@ -764,9 +768,9 @@ VALUES
 ('2026-04-06 13:16:23', 0, 25.5, 60.5, 0, 500.0, 1);
 ```
 
-#### 控制指令示例
+#### Control Command Example
 
-**Android发送**:
+**Android Sends**:
 ```json
 {
   "op": "light_th_open",
@@ -775,14 +779,14 @@ VALUES
 }
 ```
 
-**网关处理**:
+**Gateway Processing**:
 ```python
-# 更新阈值
+# Update thresholds
 state.set_threshold(FIELD_TEMPERATURE, -1)
 state.set_threshold(FIELD_HUMIDITY, -1)
 
-# 推送到设备
-# 设备接收:
+# Push to device
+# Device receives:
 {
   "Light_TH": 1,
   "Temperature": -1,
@@ -791,18 +795,18 @@ state.set_threshold(FIELD_HUMIDITY, -1)
 }
 ```
 
-#### 智能决策示例
+#### Intelligent Decision Example
 
-**触发条件**:
+**Trigger Conditions**:
 ```
 Temperature = 31.5 >= Threshold = 30.0
 Humidity = 68.0 >= Threshold = 65.0
 ```
 
-**决策结果**:
+**Decision Result**:
 ```json
 {
-  "Light_TH": 1,  // 打开空调
+  "Light_TH": 1,  // Turn on AC
   "Temperature": 31.5,
   "Humidity": 68.0,
   ...
@@ -811,37 +815,37 @@ Humidity = 68.0 >= Threshold = 65.0
 
 ---
 
-## 6. 数据库服务器
+## 6. Database Server
 
-### 6.1 服务器概述
+### 6.1 Server Overview
 
-数据库服务器是系统的中心数据管理组件，负责：
-- 用户注册和认证
-- 用户配置校验和纠正
-- 设备密钥管理
-- 设备列表查询
-- 远程数据持久化
+The database server is the central data management component of the system, responsible for:
+- User registration and authentication
+- User configuration validation and correction
+- Device key management
+- Device list queries
+- Remote data persistence
 
-**技术栈**: Python + MySQL  
-**通信协议**: TCP (端口9302)  
-**数据格式**: JSON
+**Tech Stack**: Python + MySQL  
+**Communication Protocol**: TCP (port 9302)  
+**Data Format**: JSON
 
-### 6.2 服务器架构
+### 6.2 Server Architecture
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│                   数据库服务器架构                          │
+│               Database Server Architecture                │
 ├───────────────────────────────────────────────────────────┤
 │                                                          │
 │  ┌──────────────┐      ┌──────────────┐              │
-│  │   网关端      │◄─────│ 数据库服务器   │              │
-│  │  (Python)    │ TCP   │ (Python)     │              │
+│  │  Gateway End │◄─────│ Database     │              │
+│  │  (Python)    │ TCP   │ Server       │              │
 │  └──────────────┘ 9302  └──────┬───────┘              │
 │                               │                        │
 │                               │ MySQL                  │
 │                               ▼                        │
 │                      ┌───────────────┐                │
-│                      │  MySQL数据库   │                │
+│                      │  MySQL Database│                │
 │                      │   (user_test) │                │
 │                      └───────┬───────┘                │
 │                              │                        │
@@ -849,25 +853,25 @@ Humidity = 68.0 >= Threshold = 65.0
 │          ▼                   ▼                   ▼    │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐ │
 │  │  users_data │    │  device_key │    │ device_data │ │
-│  │   用户表     │    │   密钥表     │    │   设备表     │ │
+│  │   User Table│    │   Key Table │    │  Device Table│ │
 │  └─────────────┘    └─────────────┘    └─────────────┘ │
 │                                                          │
 └───────────────────────────────────────────────────────────┘
 ```
 
-### 6.3 数据库表结构
+### 6.3 Database Table Structure
 
-#### users_data - 用户数据表
+#### users_data - User Data Table
 
-存储用户账户信息和关联的设备密钥。
+Stores user account information and associated device keys.
 
-| 字段名 | 类型 | 说明 | 约束 |
-|--------|------|------|------|
-| username | VARCHAR(50) | 用户名 | PRIMARY KEY |
-| password | VARCHAR(100) | 密码 | NOT NULL |
-| owned_device_key | VARCHAR(50) | 拥有的设备密钥 | UNIQUE KEY |
+| Field Name | Type | Description | Constraint |
+|------------|------|-------------|-------------|
+| username | VARCHAR(50) | Username | PRIMARY KEY |
+| password | VARCHAR(100) | Password | NOT NULL |
+| owned_device_key | VARCHAR(50) | Owned device key | UNIQUE KEY |
 
-**SQL创建语句**:
+**SQL CREATE Statement**:
 ```sql
 CREATE TABLE IF NOT EXISTS `users_data` (
   `username` VARCHAR(50) NOT NULL,
@@ -878,17 +882,17 @@ CREATE TABLE IF NOT EXISTS `users_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-#### device_key - 设备密钥表
+#### device_key - Device Key Table
 
-存储设备密钥的分配和使用状态。
+Stores allocation and usage status of device keys.
 
-| 字段名 | 类型 | 说明 | 约束 |
-|--------|------|------|------|
-| key_id | VARCHAR(50) | 密钥ID | PRIMARY KEY |
-| owned_by_user | VARCHAR(50) | 归属用户 | DEFAULT NULL |
-| is_used | TINYINT(1) | 是否已使用 | DEFAULT 0 |
+| Field Name | Type | Description | Constraint |
+|------------|------|-------------|-------------|
+| key_id | VARCHAR(50) | Key ID | PRIMARY KEY |
+| owned_by_user | VARCHAR(50) | Owning user | DEFAULT NULL |
+| is_used | TINYINT(1) | Whether used | DEFAULT 0 |
 
-**SQL创建语句**:
+**SQL CREATE Statement**:
 ```sql
 CREATE TABLE IF NOT EXISTS `device_key` (
   `key_id` VARCHAR(50) NOT NULL,
@@ -898,16 +902,16 @@ CREATE TABLE IF NOT EXISTS `device_key` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-#### device_data - 设备数据表
+#### device_data - Device Data Table
 
-存储设备名称和绑定的密钥。
+Stores device names and bound keys.
 
-| 字段名 | 类型 | 说明 | 约束 |
-|--------|------|------|------|
-| device_name | VARCHAR(50) | 设备名称 | PRIMARY KEY |
-| bind_device_key | VARCHAR(50) | 绑定的密钥 | NOT NULL |
+| Field Name | Type | Description | Constraint |
+|------------|------|-------------|-------------|
+| device_name | VARCHAR(50) | Device name | PRIMARY KEY |
+| bind_device_key | VARCHAR(50) | Bound key | NOT NULL |
 
-**SQL创建语句**:
+**SQL CREATE Statement**:
 ```sql
 CREATE TABLE IF NOT EXISTS `device_data` (
   `device_name` VARCHAR(50) NOT NULL,
@@ -916,76 +920,76 @@ CREATE TABLE IF NOT EXISTS `device_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### 6.4 通信协议
+### 6.4 Communication Protocol
 
-#### 连接流程
+#### Connection Flow
 
 ```
-网关端                          数据库服务器
+Gateway End                     Database Server
      │                                  │
-     │  1. TCP连接请求 (端口9302)       │
+     │  1. TCP connection request (port 9302)│
      │─────────────────────────────────►│
-     │                                  │  2. 接受连接
-     │                                  │  创建独立线程
+     │                                  │  2. Accept connection
+     │                                  │  Create separate thread
      │                                  │
-     │  3. 发送请求 (JSON)              │
+     │  3. Send request (JSON)          │
      │─────────────────────────────────►│
      │   {                              │
-     │     "op": "check_device_id",      │  4. 解析请求
-     │     "data": "A1",               │     识别操作码
+     │     "op": "check_device_id",      │  4. Parse request
+     │     "data": "A1",               │     Identify operation code
      │     "status": 1                  │
      │   }                              │
-     │                                  │  5. 执行SQL查询
+     │                                  │  5. Execute SQL query
      │                                  │     SELECT ...
      │                                  │
-     │  6. 接收响应 (JSON)              │
+     │  6. Receive response (JSON)       │
      │◄─────────────────────────────────│
-     │   {                              │  6. 构造响应
-     │     "op": "check_device_id",     │     查询结果
+     │   {                              │  6. Construct response
+     │     "op": "check_device_id",     │     Query results
      │     "data": ["A1_tem_hum",...],   │
      │     "status": 1                  │
      │   }                              │
      │                                  │
-     │  7. 继续发送下一个请求...          │
+     │  7. Continue sending next request...│
      │─────────────────────────────────►│
 ```
 
-#### 消息格式
+#### Message Format
 
-**请求格式**:
+**Request Format**:
 ```json
 {
-  "op": "操作码",
-  "data": "数据载荷",
+  "op": "operation_code",
+  "data": "data_payload",
   "status": 1
 }
 ```
 
-**响应格式**:
+**Response Format**:
 ```json
 {
-  "op": "操作码",
-  "data": "响应数据",
+  "op": "operation_code",
+  "data": "response_data",
   "status": 1
 }
 ```
 
-#### 通信特点
+#### Communication Features
 
-- **协议**: TCP
-- **端口**: 9302
-- **消息格式**: JSON
-- **分隔符**: `\n` (Line Feed)
-- **编码**: UTF-8
-- **并发**: 多线程处理，每个网关连接独立线程
+- **Protocol**: TCP
+- **Port**: 9302
+- **Message Format**: JSON
+- **Separator**: `\n` (Line Feed)
+- **Encoding**: UTF-8
+- **Concurrency**: Multi-threaded processing, separate thread per gateway connection
 
-### 6.5 操作码详解
+### 6.5 Operation Code Details
 
-#### 6.5.1 check_device_id - 查询设备列表
+#### 6.5.1 check_device_id - Query Device List
 
-**用途**: 根据设备密钥查询该密钥绑定的所有设备名称
+**Purpose**: Query all device names bound to a device key based on the key
 
-**请求示例**:
+**Request Example**:
 ```json
 {
   "op": "check_device_id",
@@ -994,19 +998,19 @@ CREATE TABLE IF NOT EXISTS `device_data` (
 }
 ```
 
-**请求参数**:
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| op | string | 固定值: "check_device_id" |
-| data | string | 设备密钥 (如 "A1") |
-| status | int | 固定值: 1 |
+**Request Parameters**:
+| Field Name | Type | Description |
+|------------|------|-------------|
+| op | string | Fixed value: "check_device_id" |
+| data | string | Device key (e.g., "A1") |
+| status | int | Fixed value: 1 |
 
-**SQL查询**:
+**SQL Query**:
 ```sql
 SELECT device_name FROM device_data WHERE bind_device_key = %s
 ```
 
-**响应示例** (成功):
+**Response Example** (Success):
 ```json
 {
   "op": "check_device_id",
@@ -1015,32 +1019,32 @@ SELECT device_name FROM device_data WHERE bind_device_key = %s
 }
 ```
 
-**响应示例** (失败):
+**Response Example** (Failure):
 ```json
 {
   "op": "check_device_id",
-  "data": "设备密钥不存在",
+  "data": "Device key does not exist",
   "status": 0
 }
 ```
 
-**响应码**:
-| status | 说明 |
-|--------|------|
-| 1 | 查询成功，返回设备列表 |
-| 0 | 查询失败，返回错误信息 |
-| 2 | 数据库异常 |
+**Response Code**:
+| status | Description |
+|--------|-------------|
+| 1 | Query successful, return device list |
+| 0 | Query failed, return error message |
+| 2 | Database exception |
 
-**使用场景**:
-- 网关启动时获取允许的设备列表
-- 用户登录时获取其拥有的设备
-- 设备管理时查询设备归属
+**Usage Scenarios**:
+- Gateway retrieves allowed device list at startup
+- User retrieves their owned devices when logging in
+- Query device ownership during device management
 
-#### 6.5.2 check_userconfig_illegal - 用户配置校验
+#### 6.5.2 check_userconfig_illegal - User Configuration Validation
 
-**用途**: 验证网关本地用户配置是否合法，如果异常则尝试纠正
+**Purpose**: Verify if gateway local user configuration is valid, attempt to correct if abnormal
 
-**请求示例**:
+**Request Example**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1053,23 +1057,23 @@ SELECT device_name FROM device_data WHERE bind_device_key = %s
 }
 ```
 
-**请求参数**:
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| op | string | 固定值: "check_userconfig_illegal" |
-| data | object | 用户信息对象 |
-| data.username | string | 用户名 |
-| data.password | string | 密码 |
-| data.device_key | string | 设备密钥 |
-| status | int | 固定值: 1 |
+**Request Parameters**:
+| Field Name | Type | Description |
+|------------|------|-------------|
+| op | string | Fixed value: "check_userconfig_illegal" |
+| data | object | User information object |
+| data.username | string | Username |
+| data.password | string | Password |
+| data.device_key | string | Device key |
+| status | int | Fixed value: 1 |
 
-**SQL查询**:
+**SQL Query**:
 ```sql
 SELECT * FROM users_data 
 WHERE username = %s AND password = %s AND owned_device_key = %s
 ```
 
-**响应示例1** (配置合法):
+**Response Example 1** (Configuration Valid):
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1078,7 +1082,7 @@ WHERE username = %s AND password = %s AND owned_device_key = %s
 }
 ```
 
-**响应示例2** (配置异常，已纠正):
+**Response Example 2** (Configuration Invalid, Corrected):
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1091,7 +1095,7 @@ WHERE username = %s AND password = %s AND owned_device_key = %s
 }
 ```
 
-**响应示例3** (用户未注册):
+**Response Example 3** (User Not Registered):
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1100,35 +1104,35 @@ WHERE username = %s AND password = %s AND owned_device_key = %s
 }
 ```
 
-**响应码**:
-| status | 说明 | 后续操作 |
-|--------|------|----------|
-| 1 | 配置合法或已纠正 | 网关更新配置 |
-| 0 | 配置非法，无法纠正 | 网关记录警告 |
-| 2 | 数据库异常 | 网关记录错误 |
+**Response Code**:
+| status | Description | Follow-up Action |
+|--------|-------------|-----------------|
+| 1 | Configuration valid or corrected | Gateway updates configuration |
+| 0 | Configuration invalid, cannot correct | Gateway logs warning |
+| 2 | Database exception | Gateway logs error |
 
-**处理流程**:
+**Processing Flow**:
 ```
-1. 接收用户配置
+1. Receive user configuration
    ↓
-2. 查询数据库验证
+2. Query database for verification
    ↓
-3a. 配置匹配 → 返回 status=1
+3a. Configuration matches → Return status=1
    ↓
-3b. 配置不匹配 → 返回 status=0
+3b. Configuration mismatch → Return status=0
    ↓
-4. 尝试纠正：按用户名查询
+4. Attempt correction: query by username
    ↓
-5a. 找到用户 → 返回正确配置 (status=1)
+5a. User found → Return correct configuration (status=1)
    ↓
-5b. 未找到用户 → 返回 status=0
+5b. User not found → Return status=0
 ```
 
-#### 6.5.3 add_new_user - 添加新用户
+#### 6.5.3 add_new_user - Add New User
 
-**用途**: 注册新用户，并关联设备密钥
+**Purpose**: Register a new user and associate with device key
 
-**请求示例**:
+**Request Example**:
 ```json
 {
   "op": "add_new_user",
@@ -1141,30 +1145,30 @@ WHERE username = %s AND password = %s AND owned_device_key = %s
 }
 ```
 
-**请求参数**:
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| op | string | 固定值: "add_new_user" |
-| data | object | 用户信息对象 |
-| data.username | string | 用户名 |
-| data.password | string | 密码 |
-| data.device_key | string | 设备密钥 |
-| status | int | 固定值: 1 |
+**Request Parameters**:
+| Field Name | Type | Description |
+|------------|------|-------------|
+| op | string | Fixed value: "add_new_user" |
+| data | object | User information object |
+| data.username | string | Username |
+| data.password | string | Password |
+| data.device_key | string | Device key |
+| status | int | Fixed value: 1 |
 
-**SQL操作** (事务):
+**SQL Operations** (Transaction):
 ```sql
--- 1. 插入用户数据
+-- 1. Insert user data
 INSERT INTO users_data (username, password, owned_device_key) 
 VALUES (%s, %s, %s);
 
--- 2. 更新设备密钥归属
+-- 2. Update device key ownership
 UPDATE device_key SET owned_by_user = %s WHERE key_id = %s;
 
--- 3. 标记密钥已使用
+-- 3. Mark key as used
 UPDATE device_key SET is_used = 1 WHERE owned_by_user = %s;
 ```
 
-**响应示例** (成功):
+**Response Example** (Success):
 ```json
 {
   "op": "add_new_user",
@@ -1173,7 +1177,7 @@ UPDATE device_key SET is_used = 1 WHERE owned_by_user = %s;
 }
 ```
 
-**响应示例** (失败 - 用户已存在):
+**Response Example** (Failure - User Already Exists):
 ```json
 {
   "op": "add_new_user",
@@ -1182,7 +1186,7 @@ UPDATE device_key SET is_used = 1 WHERE owned_by_user = %s;
 }
 ```
 
-**响应示例** (数据库异常):
+**Response Example** (Database Exception):
 ```json
 {
   "op": "add_new_user",
@@ -1191,31 +1195,31 @@ UPDATE device_key SET is_used = 1 WHERE owned_by_user = %s;
 }
 ```
 
-**响应码**:
-| status | 说明 |
-|--------|------|
-| 1 | 用户添加成功 |
-| 0 | 用户添加失败（主键或唯一键冲突） |
-| 2 | 数据库异常，返回错误信息 |
+**Response Code**:
+| status | Description |
+|--------|-------------|
+| 1 | User added successfully |
+| 0 | User addition failed (primary key or unique key conflict) |
+| 2 | Database exception, return error message |
 
-**事务处理**:
+**Transaction Handling**:
 ```python
 try:
     cursor.execute(sql1, (username, password, device_key))
     cursor.execute(sql2, (username, device_key))
     cursor.execute(sql3, (username,))
-    db.commit()  # 提交事务
+    db.commit()  # Commit transaction
 except Exception:
-    db.rollback()  # 回滚事务
+    db.rollback()  # Rollback transaction
 ```
 
-### 6.6 各种情况处理
+### 6.6 Various Scenario Handling
 
-#### 情况1: 网关配置正确
+#### Scenario 1: Gateway Configuration Correct
 
-**场景**: 网关的 `UserConfig.txt` 与数据库一致
+**Scenario**: Gateway's `UserConfig.txt` matches database
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1224,7 +1228,7 @@ except Exception:
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1233,15 +1237,15 @@ except Exception:
 }
 ```
 
-**网关行为**: 配置正常，继续运行
+**Gateway Behavior**: Configuration normal, continue operation
 
 ---
 
-#### 情况2: 网关密码错误
+#### Scenario 2: Gateway Password Error
 
-**场景**: 用户修改了网关配置文件的密码
+**Scenario**: User modified gateway configuration file password
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1250,7 +1254,7 @@ except Exception:
 }
 ```
 
-**第一次响应**:
+**First Response**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1259,9 +1263,9 @@ except Exception:
 }
 ```
 
-**纠正请求**: 按用户名查询数据库
+**Correction Request**: Query database by username
 
-**纠正响应**:
+**Correction Response**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1270,18 +1274,18 @@ except Exception:
 }
 ```
 
-**网关行为**: 
-1. 接收到 status=0，记录警告
-2. 接收到正确配置，更新 `UserConfig.txt`
-3. 重启网关或重新加载配置
+**Gateway Behavior**:
+1. Receive status=0, log warning
+2. Receive correct configuration, update `UserConfig.txt`
+3. Restart gateway or reload configuration
 
 ---
 
-#### 情况3: 用户未注册
+#### Scenario 3: User Not Registered
 
-**场景**: 新网关或用户被删除
+**Scenario**: New gateway or user deleted
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1290,7 +1294,7 @@ except Exception:
 }
 ```
 
-**第一次响应**:
+**First Response**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1299,9 +1303,9 @@ except Exception:
 }
 ```
 
-**纠正尝试**: 按用户名查询
+**Correction Attempt**: Query by username
 
-**纠正响应**:
+**Correction Response**:
 ```json
 {
   "op": "check_userconfig_illegal",
@@ -1310,18 +1314,18 @@ except Exception:
 }
 ```
 
-**网关行为**: 
-1. 记录错误日志
-2. 拒绝服务
-3. 提示用户先注册
+**Gateway Behavior**:
+1. Log error
+2. Refuse service
+3. Prompt user to register first
 
 ---
 
-#### 情况4: 设备密钥不存在
+#### Scenario 4: Device Key Does Not Exist
 
-**场景**: 查询不存在的设备密钥
+**Scenario**: Query non-existent device key
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "check_device_id",
@@ -1330,7 +1334,7 @@ except Exception:
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "op": "check_device_id",
@@ -1339,18 +1343,18 @@ except Exception:
 }
 ```
 
-**网关行为**: 
-1. 返回空列表
-2. 日志记录: 未找到设备
-3. 网关无法连接任何设备
+**Gateway Behavior**:
+1. Return empty list
+2. Log: Device not found
+3. Gateway unable to connect any devices
 
 ---
 
-#### 情况5: 用户已存在
+#### Scenario 5: User Already Exists
 
-**场景**: 尝试注册已存在的用户名
+**Scenario**: Attempt to register existing username
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "add_new_user",
@@ -1359,7 +1363,7 @@ except Exception:
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "op": "add_new_user",
@@ -1368,18 +1372,18 @@ except Exception:
 }
 ```
 
-**网关行为**: 
-1. 接收 status=0
-2. 返回注册失败消息给Android
-3. 提示用户: 用户名已存在
+**Gateway Behavior**:
+1. Receive status=0
+2. Return registration failure message to Android
+3. Prompt user: Username already exists
 
 ---
 
-#### 情况6: 设备密钥已被使用
+#### Scenario 6: Device Key Already Used
 
-**场景**: 尝试使用已分配的密钥注册
+**Scenario**: Attempt to register with already allocated key
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "add_new_user",
@@ -1388,7 +1392,7 @@ except Exception:
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "op": "add_new_user",
@@ -1397,34 +1401,34 @@ except Exception:
 }
 ```
 
-**网关行为**: 
-1. 接收 status=0
-2. 返回注册失败消息给Android
-3. 提示用户: 设备密钥已被使用
+**Gateway Behavior**:
+1. Receive status=0
+2. Return registration failure message to Android
+3. Prompt user: Device key already in use
 
 ---
 
-#### 情况7: 数据库连接失败
+#### Scenario 7: Database Connection Failed
 
-**场景**: MySQL服务未启动或网络中断
+**Scenario**: MySQL service not started or network interrupted
 
-**请求**: 发送任何请求
+**Request**: Send any request
 
-**响应**: 无响应（连接超时）
+**Response**: No response (connection timeout)
 
-**网关行为**: 
-1. 捕获连接异常
-2. 记录错误日志
-3. 生产模式: 退出程序
-4. 测试模式: 继续运行，使用默认配置
+**Gateway Behavior**:
+1. Catch connection exception
+2. Log error
+3. Production mode: Exit program
+4. Test mode: Continue to run, use default configuration
 
 ---
 
-#### 情况8: 数据库查询异常
+#### Scenario 8: Database Query Exception
 
-**场景**: SQL语法错误或表不存在
+**Scenario**: SQL syntax error or table does not exist
 
-**请求**:
+**Request**:
 ```json
 {
   "op": "check_device_id",
@@ -1433,7 +1437,7 @@ except Exception:
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "op": "check_device_id",
@@ -1442,60 +1446,60 @@ except Exception:
 }
 ```
 
-**网关行为**: 
-1. 接收 status=0
-2. 记录错误信息和堆栈
-3. 返回空列表或错误提示
+**Gateway Behavior**:
+1. Receive status=0
+2. Log error and stack trace
+3. Return empty list or error message
 
 ---
 
-### 6.7 配置文件
+### 6.7 Configuration Files
 
 #### serverConfig.txt
 
-**位置**: `Python/Database Server/serverConfig.txt`
+**Location**: `Python/Database Server/serverConfig.txt`
 
-**格式**:
+**Format**:
 ```
-<监听IP>
-<监听端口>
+<Listening IP>
+<Listening Port>
 ```
 
-**示例**:
+**Example**:
 ```
 0.0.0.0
 9302
 ```
 
-**配置说明**:
-- **监听IP**: 
-  - `0.0.0.0`: 监听所有网络接口（推荐）
-  - `127.0.0.1`: 仅本地访问
-  - `192.168.x.x`: 指定IP（仅当该IP存在时有效）
-- **监听端口**: 9302（默认）
+**Configuration Description**:
+- **Listening IP**:
+  - `0.0.0.0`: Listen on all network interfaces (recommended)
+  - `127.0.0.1`: Local access only
+  - `192.168.x.x`: Specific IP (valid only if that IP exists)
+- **Listening Port**: 9302 (default)
 
-**注意事项**:
-- ⚠️ 不要使用不存在的IP地址（如 `192.168.1.107` 在本地可能不存在）
-- ⚠️ 端口9302必须未被占用
-- ⚠️ 修改配置后需重启服务器
+**Notes**:
+- ⚠️ Do not use non-existent IP addresses (e.g., `192.168.1.107` may not exist locally)
+- ⚠️ Port 9302 must not be occupied
+- ⚠️ Restart server after modifying configuration
 
-### 6.8 启动数据库服务器
+### 6.8 Starting Database Server
 
-#### 方式1: 直接启动
+#### Method 1: Direct Start
 
 ```bash
 cd "d:\projects\ai_generate\edge computing home\Python\Database Server"
 python database_process_server.py
 ```
 
-#### 方式2: 使用测试脚本
+#### Method 2: Use Test Script
 
 ```bash
 cd "d:\projects\ai_generate\edge computing home"
 python Python/scripts/test_database_server.py
 ```
 
-#### 方式3: 后台运行
+#### Method 3: Background Run
 
 **Windows**:
 ```bash
@@ -1507,116 +1511,116 @@ start /B python database_process_server.py > server.log 2>&1
 nohup python database_process_server.py > server.log 2>&1 &
 ```
 
-### 6.9 数据库初始化
+### 6.9 Database Initialization
 
-#### 初始化数据库和表
+#### Initialize Database and Tables
 
 ```bash
 mysql -u root -p1234 < Python/Database\ Server/init_database.sql
 ```
 
-#### 手动初始化
+#### Manual Initialization
 
 ```sql
--- 创建数据库
+-- Create database
 CREATE DATABASE IF NOT EXISTS `user_test` 
 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE `user_test`;
 
--- 创建表（见6.3节）
+-- Create tables (see section 6.3)
 
--- 插入示例数据
+-- Insert sample data
 INSERT INTO users_data (username, password, owned_device_key)
 VALUES ('Jiang', 'pwd', 'A1');
 ```
 
-### 6.10 测试工具
+### 6.10 Testing Tools
 
-#### 测试脚本
+#### Test Script
 
-**位置**: `Python/scripts/test_database_server.py`
+**Location**: `Python/scripts/test_database_server.py`
 
-**功能**:
-- 测试数据库连接
-- 启动数据库服务器
-- 测试服务器连接
-- 测试查询设备列表
-- 测试用户配置校验
-- 测试添加新用户
+**Features**:
+- Test database connection
+- Start database server
+- Test server connection
+- Test query device list
+- Test user configuration verification
+- Test add new user
 
-**运行测试**:
+**Run Tests**:
 ```bash
 python Python/scripts/test_database_server.py
 ```
 
-**预期输出**:
+**Expected Output**:
 ```
 ============================================================
-数据库服务器和网关连接测试
+Database Server and Gateway Connection Test
 ============================================================
 
 ============================================================
-测试1: 数据库连接
+Test 1: Database Connection
 ============================================================
-✓ 数据库 'user_test' 存在
-✓ 找到 3 个表:
+✓ Database 'user_test' exists
+✓ Found 3 tables:
   - device_data
   - device_key
   - users_data
 
 ============================================================
-测试2: 启动数据库服务器
+Test 2: Start Database Server
 ============================================================
-✓ 配置加载成功:
-  - 服务器IP: 0.0.0.0
-  - 监听端口: 9302
-✓ 数据库服务器启动成功
+✓ Configuration loaded successfully:
+  - Server IP: 0.0.0.0
+  - Listening Port: 9302
+✓ Database server started successfully
 
 ============================================================
-测试结果汇总
+Test Result Summary
 ============================================================
-数据库连接: ✓ 通过
-服务器启动: ✓ 通过
-服务器连接: ✓ 通过
-查询设备列表: ✓ 通过
-用户配置校验: ✓ 通过
-添加新用户: ✓ 通过
+Database connection: ✓ Passed
+Server start: ✓ Passed
+Server connection: ✓ Passed
+Query device list: ✓ Passed
+User configuration verification: ✓ Passed
+Add new user: ✓ Passed
 
-✅ 核心测试通过！数据库服务器运行正常
+✅ Core tests passed! Database server running normally
 ```
 
-### 6.11 日志和调试
+### 6.11 Logging and Debugging
 
-#### 日志文件
+#### Log Files
 
-**位置**: `Python/Database Server/serverLogs.log`
+**Location**: `Python/Database Server/serverLogs.log`
 
-**日志格式**:
+**Log Format**:
 ```
-[2026-04-06 13:37:10,805][INFO][__main__][database_process_server.py:60] 数据库连接成功
-[2026-04-06 13:37:11,123][INFO][__main__][database_process_server.py:78] 网关 ('192.168.1.108', 54321) 已连接
-[2026-04-06 13:37:11,456][INFO][__main__][database_process_server.py:104] 处理 check_device_id 请求
-[2026-04-06 13:37:11,457][INFO][__main__][database_process_server.py:238] 查询到 3 个设备
+[2026-04-06 13:37:10,805][INFO][__main__][database_process_server.py:60] Database connection successful
+[2026-04-06 13:37:11,123][INFO][__main__][database_process_server.py:78] Gateway ('192.168.1.108', 54321) connected
+[2026-04-06 13:37:11,456][INFO][__main__][database_process_server.py:104] Processing check_device_id request
+[2026-04-06 13:37:11,457][INFO][__main__][database_process_server.py:238] Found 3 devices
 ```
 
-#### 日志级别
+#### Log Levels
 
-| 级别 | 说明 | 使用场景 |
-|------|------|----------|
-| DEBUG | 调试信息 | 开发调试 |
-| INFO | 一般信息 | 正常运行 |
-| WARNING | 警告信息 | 配置异常 |
-| ERROR | 错误信息 | 操作失败 |
+| Level | Description | Usage Scenario |
+|-------|-------------|----------------|
+| DEBUG | Debug information | Development and debugging |
+| INFO | General information | Normal operation |
+| WARNING | Warning information | Configuration anomalies |
+| ERROR | Error information | Operation failures |
 
-#### 调试技巧
+#### Debugging Tips
 
-**1. 查看实时日志**:
+**1. View Real-time Logs**:
 ```bash
 tail -f Python/Database\ Server/serverLogs.log
 ```
 
-**2. 检查数据库连接**:
+**2. Check Database Connection**:
 ```python
 import mysql.connector
 conn = mysql.connector.connect(
@@ -1626,74 +1630,74 @@ conn = mysql.connector.connect(
     password="1234",
     database="user_test"
 )
-print("连接成功")
+print("Connection successful")
 ```
 
-**3. 测试SQL查询**:
+**3. Test SQL Query**:
 ```bash
 mysql -u root -p1234 user_test -e "SELECT * FROM users_data;"
 ```
 
-### 6.12 常见问题
+### 6.12 Common Issues
 
-#### Q1: 数据库服务器无法启动
+#### Q1: Database Server Cannot Start
 
-**症状**: `OSError: [WinError 10049] 在其上下文中，该请求的地址无效`
+**Symptom**: `OSError: [WinError 10049] The requested address is not valid in its context`
 
-**原因**: 监听IP不存在或不可用
+**Cause**: Listening IP does not exist or is unavailable
 
-**解决方法**:
+**Solution**:
 ```bash
-# 修改 serverConfig.txt
-# 将 192.168.1.107 改为 0.0.0.0
+# Modify serverConfig.txt
+# Change 192.168.1.107 to 0.0.0.0
 ```
 
-#### Q2: 网关无法连接数据库服务器
+#### Q2: Gateway Cannot Connect to Database Server
 
-**症状**: 连接超时或连接被拒绝
+**Symptom**: Connection timeout or connection refused
 
-**原因**: 
-1. 服务器未启动
-2. IP地址配置错误
-3. 防火墙阻止
+**Causes**:
+1. Server not started
+2. Incorrect IP address configuration
+3. Firewall blocking
 
-**解决方法**:
+**Solution**:
 ```bash
-# 1. 检查服务器是否运行
+# 1. Check if server is running
 netstat -ano | findstr "9302"
 
-# 2. 测试端口连通性
+# 2. Test port connectivity
 telnet 127.0.0.1 9302
 
-# 3. 检查防火墙（Windows）
+# 3. Check firewall (Windows)
 netsh advfirewall firewall show rule name=all
 ```
 
-#### Q3: 数据库连接失败
+#### Q3: Database Connection Failed
 
-**症状**: `mysql.connector.Error: Access denied for user`
+**Symptom**: `mysql.connector.Error: Access denied for user`
 
-**原因**: 用户名或密码错误
+**Cause**: Incorrect username or password
 
-**解决方法**:
+**Solution**:
 ```bash
-# 测试连接
+# Test connection
 mysql -u root -p1234
 
-# 修改配置
-# 确保 user_test 数据库存在
-# 确保 root 用户密码为 1234
+# Modify configuration
+# Ensure user_test database exists
+# Ensure root user password is 1234
 ```
 
 ---
 
-## 7. 启动方式
+## 7. Startup Methods
 
-### 7.1 环境要求
+### 7.1 Environment Requirements
 
-#### Python环境
-- **Python版本**: 3.7+
-- **依赖包**:
+#### Python Environment
+- **Python Version**: 3.7+
+- **Dependency Packages**:
   ```bash
   pip install -r requirements.txt
   ```
@@ -1704,55 +1708,55 @@ mysql-connector-python
 aliyun-iot-linkkit
 ```
 
-#### MySQL环境
-- **MySQL版本**: 5.7+
-- **数据库**: gate_database
-- **用户权限**: CREATE, INSERT, SELECT
+#### MySQL Environment
+- **MySQL Version**: 5.7+
+- **Database**: gate_database
+- **User Permissions**: CREATE, INSERT, SELECT
 
-#### ESP8266环境
-- **开发环境**: Arduino IDE
-- **开发板**: ESP8266 (NodeMCU/Wemos)
-- **必要库**:
+#### ESP8266 Environment
+- **Development Environment**: Arduino IDE
+- **Board**: ESP8266 (NodeMCU/Wemos)
+- **Required Libraries**:
   - ESP8266WiFi
   - ArduinoJson
   - DHT_sensor_library
   - Adafruit_SSD1306
   - Adafruit_GFX
 
-#### Android环境
+#### Android Environment
 - **Android Studio**: 4.0+
-- **最低SDK版本**: API 21 (Android 5.0)
-- **目标SDK版本**: API 33 (Android 13)
+- **Minimum SDK Version**: API 21 (Android 5.0)
+- **Target SDK Version**: API 33 (Android 13)
 
-### 7.2 网关启动
+### 7.2 Gateway Startup
 
-#### 生产模式启动
+#### Production Mode Startup
 
 ```bash
 cd "d:\projects\ai_generate\edge computing home\Python\Gate"
 python gate.py
 ```
 
-**生产模式特点**:
-- 连接数据库服务器
-- 验证用户配置
-- 获取允许设备列表
-- 所有功能正常启用
+**Production Mode Features**:
+- Connect to database server
+- Verify user configuration
+- Get allowed device list
+- All features enabled
 
-#### 测试模式启动
+#### Test Mode Startup
 
 ```bash
 cd "d:\projects\ai_generate\edge computing home\Python\Gate"
 python gate_test.py --test
 ```
 
-**测试模式特点**:
-- ⚠️ 跳过数据库服务器连接
-- 使用默认设备列表
-- 跳过用户配置校验
-- 适合开发和测试环境
+**Test Mode Features**:
+- ⚠️ Skip database server connection
+- Use default device list
+- Skip user configuration verification
+- Suitable for development and testing environments
 
-**环境变量方式**:
+**Environment Variable Method**:
 ```bash
 # Windows
 set TEST_MODE=true
@@ -1763,7 +1767,7 @@ export TEST_MODE=true
 python gate.py
 ```
 
-#### 后台运行
+#### Background Run
 
 **Windows**:
 ```bash
@@ -1775,95 +1779,95 @@ start /B python gate.py > gateway.log 2>&1
 nohup python gate.py > gateway.log 2>&1 &
 ```
 
-### 7.3 设备端启动
+### 7.3 Device Startup
 
-#### 上传固件到ESP8266
+#### Upload Firmware to ESP8266
 
-1. **配置设备参数**
-   - 复制 `config_template.h` 为 `config.h`
-   - 修改WiFi信息
-   - 修改网关IP和端口
+1. **Configure Device Parameters**
+   - Copy `config_template.h` to `config.h`
+   - Modify WiFi information
+   - Modify gateway IP and port
 
-2. **使用Arduino IDE上传**
-   - 打开 `.ino` 文件
-   - 选择开发板: NodeMCU 1.0
-   - 选择端口: COMx
-   - 点击上传按钮
+2. **Upload Using Arduino IDE**
+   - Open `.ino` file
+   - Select board: NodeMCU 1.0
+   - Select port: COMx
+   - Click upload button
 
-3. **查看串口监视器**
-   - 波特率: 115200
-   - 观察连接状态
-   - 确认网关连接成功
+3. **View Serial Monitor**
+   - Baud rate: 115200
+   - Observe connection status
+   - Confirm gateway connection successful
 
-#### 自动启动
+#### Automatic Startup
 
-**设备上电后自动启动**:
-1. 连接WiFi
-2. 连接网关
-3. 发送设备ID
-4. 开始数据通信
+**Device Auto-starts After Power-on**:
+1. Connect to WiFi
+2. Connect to gateway
+3. Send device ID
+4. Start data communication
 
-### 7.4 Android应用启动
+### 7.4 Android Application Startup
 
-#### 开发环境启动
+#### Development Environment Startup
 
-1. **打开Android Studio**
-2. **导入项目**: `Android IoT APP`
-3. **配置网络**: 确保 `app/src/main/assets/config.properties` 正确
-4. **运行应用**: 点击运行按钮
+1. **Open Android Studio**
+2. **Import Project**: `Android IoT APP`
+3. **Configure Network**: Ensure `app/src/main/assets/config.properties` is correct
+4. **Run Application**: Click run button
 
-#### 安装APK
+#### Install APK
 
-1. **构建APK**
+1. **Build APK**
    - Build > Generate Signed Bundle / APK
-   - 选择APK
-   - 选择debug或release
+   - Select APK
+   - Select debug or release
 
-2. **安装到设备**
+2. **Install to Device**
    ```bash
    adb install app-release.apk
    ```
 
-3. **配置网关地址**
-   - 打开应用
-   - 输入网关IP和端口
-   - 点击连接
+3. **Configure Gateway Address**
+   - Open application
+   - Enter gateway IP and port
+   - Click connect
 
-### 7.5 启动顺序
+### 7.5 Startup Order
 
-**推荐启动顺序**:
+**Recommended Startup Order**:
 
 ```
-1. 启动MySQL数据库服务
+1. Start MySQL database service
    ↓
-2. 启动数据库服务器 (可选)
+2. Start database server (optional)
    ↓
-3. 启动网关 (Python)
+3. Start gateway (Python)
    ↓
-4. 启动ESP8266设备 (多个设备可并行)
+4. Start ESP8266 devices (multiple devices can run in parallel)
    ↓
-5. 启动Android应用
+5. Start Android application
 ```
 
-**注意事项**:
-- ⚠️ 必须先启动网关，再启动设备和Android
-- ⚠️ 设备和Android连接失败时，检查网关是否正常运行
-- ⚠️ 测试模式可以跳过步骤1和2
+**Notes**:
+- ⚠️ Must start gateway before devices and Android
+- ⚠️ If device or Android connection fails, check if gateway is running normally
+- ⚠️ Test mode can skip steps 1 and 2
 
-### 7.6 健康检查
+### 7.6 Health Check
 
-**使用健康检查工具**:
+**Use Health Check Tool**:
 ```bash
 cd "d:\projects\ai_generate\edge computing home"
 python Python/scripts/health_check.py
 ```
 
-**检查项**:
-- 配置文件完整性
-- 网关进程状态
-- 网络端口可用性
-- 数据库连接状态
-- 设备连接状态
+**Check Items**:
+- Configuration file integrity
+- Gateway process status
+- Network port availability
+- Database connection status
+- Device connection status
 
 ---
 
@@ -2067,16 +2071,16 @@ CAPABILITIES_FILE = device_capabilities.json
 9. Dialog Manager 更新对话历史
 ```
 
-#### 8.4.2 示例对话
+#### 8.4.2 Example Dialogue
 
-**用户输入**:
+**User Input**:
 ```
-请帮我把空调打开，温度设置到26度，然后打开窗帘
+Please help me turn on the air conditioner, set the temperature to 26 degrees, and then open the curtain
 ```
 
-**AI Agent 处理流程**:
+**AI Agent Processing Flow**:
 
-1. **意图识别**:
+1. **Intent Recognition**:
 ```python
 {
   "intent": "control_devices",
@@ -2089,19 +2093,19 @@ CAPABILITIES_FILE = device_capabilities.json
 }
 ```
 
-2. **任务执行**:
+2. **Task Execution**:
 ```python
-# Task Executor 调用 Device Controller
+# Task Executor calls Device Controller
 device_controller.execute("A1_tem_hum", "set_ac_power", {"power": "on"})
 device_controller.execute("A1_tem_hum", "set_temperature", {"temperature": 26})
 device_controller.execute("A1_curtain", "set_curtain", {"open": true})
 ```
 
-3. **返回结果**:
+3. **Return Result**:
 ```python
 {
   "status": "success",
-  "message": "已为您执行以下操作：\n1. 打开空调\n2. 设置温度到26度\n3. 打开窗帘",
+  "message": "The following operations have been performed for you:\n1. Turn on the air conditioner\n2. Set temperature to 26 degrees\n3. Open the curtain",
   "details": [
     {"device": "A1_tem_hum", "action": "set_ac_power", "result": "success"},
     {"device": "A1_tem_hum", "action": "set_temperature", "result": "success"},
@@ -2110,40 +2114,40 @@ device_controller.execute("A1_curtain", "set_curtain", {"open": true})
 }
 ```
 
-### 8.5 API 使用
+### 8.5 API Usage
 
-#### 8.5.1 智谱 AI Python SDK 安装
+#### 8.5.1 Zhipu AI Python SDK Installation
 
 ```bash
 pip install zhipuai
 ```
 
-#### 8.5.2 基本使用
+#### 8.5.2 Basic Usage
 
 ```python
 from zhipuai import ZhipuAI
 
-# 初始化客户端
+# Initialize client
 client = ZhipuAI(api_key="your_api_key")
 
-# 调用模型
+# Call model
 response = client.chat.completions.create(
     model="GLM-4.7-Flash",
     messages=[
-        {"role": "user", "content": "你好，请介绍一下你自己"}
+        {"role": "user", "content": "Hello, please introduce yourself"}
     ],
     temperature=0.7,
     max_tokens=2048
 )
 
-# 获取响应
+# Get response
 print(response.choices[0].message.content)
 ```
 
-#### 8.5.3 系统中使用
+#### 8.5.3 System Usage
 
 ```python
-# 在 Intent Planner 中使用
+# Usage in Intent Planner
 from zhipuai import ZhipuAI
 
 class IntentPlanner:
@@ -2151,13 +2155,13 @@ class IntentPlanner:
         self.client = ZhipuAI(api_key=api_key)
     
     def plan(self, user_input, device_capabilities):
-        """规划任务"""
+        """Plan task"""
         prompt = self._build_prompt(user_input, device_capabilities)
         
         response = self.client.chat.completions.create(
             model="GLM-4.7-Flash",
             messages=[
-                {"role": "system", "content": "你是一个智能家居任务规划助手"},
+                {"role": "system", "content": "You are a smart home task planning assistant"},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
@@ -2168,199 +2172,199 @@ class IntentPlanner:
         return task_plan
 ```
 
-### 8.6 性能优化
+### 8.6 Performance Optimization
 
-#### 8.6.1 性能指标
+#### 8.6.1 Performance Metrics
 
-| 指标 | 目标值 | 实际值 | 状态 |
-|------|--------|--------|------|
-| 意图识别准确率 | ≥ 95% | 100% | ✅ |
-| 任务执行准确率 | ≥ 90% | 98.6% | ✅ |
-| LLM 推理时间 | < 10s | 8.7s | ✅ |
-| Token 效率 | < 25ms | 22.1ms | ✅ |
-| 端到端延迟 | < 10s | 9.2s | ✅ |
+| Metric | Target Value | Actual Value | Status |
+|--------|--------------|--------------|--------|
+| Intent Recognition Accuracy | ≥ 95% | 100% | ✅ |
+| Task Execution Accuracy | ≥ 90% | 98.6% | ✅ |
+| LLM Inference Time | < 10s | 8.7s | ✅ |
+| Token Efficiency | < 25ms | 22.1ms | ✅ |
+| End-to-end Latency | < 10s | 9.2s | ✅ |
 
-#### 8.6.2 优化策略
+#### 8.6.2 Optimization Strategies
 
-**1. 提示词优化**:
-- 使用清晰、简洁的指令
-- 提供充足的上下文信息
-- 使用 JSON 格式约束输出
+**1. Prompt Optimization**:
+- Use clear and concise instructions
+- Provide sufficient context information
+- Use JSON format to constrain output
 
-**2. 缓存策略**:
-- 缓存常见意图识别结果
-- 缓存设备能力描述
-- 缓存用户偏好设置
+**2. Caching Strategy**:
+- Cache common intent recognition results
+- Cache device capability descriptions
+- Cache user preference settings
 
-**3. 并发处理**:
-- 异步调用 LLM API
-- 并行执行设备控制任务
-- 使用线程池管理并发
+**3. Concurrent Processing**:
+- Asynchronously call LLM API
+- Parallelly execute device control tasks
+- Use thread pool to manage concurrency
 
-**4. 资源管理**:
-- 限制对话历史长度
-- 合理设置 Token 上限
-- 及时释放资源
+**4. Resource Management**:
+- Limit dialog history length
+- Reasonably set token limits
+- Release resources timely
 
-### 8.7 故障排查
+### 8.7 Troubleshooting
 
-#### 8.7.1 常见问题
+#### 8.7.1 Common Issues
 
-**Q: LLM API 调用失败？**
+**Q: LLM API Call Failed?**
 
-- 检查 API Key 是否正确
-- 验证网络连接是否正常
-- 查看智谱 AI 服务状态
-- 检查 API 配额是否充足
+- Check if API Key is correct
+- Verify if network connection is normal
+- Check Zhipu AI service status
+- Check if API quota is sufficient
 
-**Q: 意图识别不准确？**
+**Q: Intent Recognition Inaccurate?**
 
-- 优化提示词内容
-- 增加上下文信息
-- 调整 Temperature 参数
-- 丰富设备能力描述
+- Optimize prompt content
+- Increase context information
+- Adjust Temperature parameter
+- Enrich device capability description
 
-**Q: 响应速度慢？**
+**Q: Slow Response Speed?**
 
-- 检查网络延迟
-- 减少对话历史长度
-- 降低 MAX_TOKENS 设置
-- 考虑使用流式输出
+- Check network latency
+- Reduce dialog history length
+- Lower MAX_TOKENS setting
+- Consider using streaming output
 
-**Q: Token 消耗过快？**
+**Q: Token Consumption Too Fast?**
 
-- 优化提示词长度
-- 限制对话上下文轮数
-- 压缩设备能力描述
-- 使用缓存策略
+- Optimize prompt length
+- Limit dialog context rounds
+- Compress device capability description
+- Use caching strategy
 
-#### 8.7.2 调试工具
+#### 8.7.2 Debugging Tools
 
-**启用详细日志**:
+**Enable Verbose Logging**:
 
 ```python
-# 在 ai_agent_config.txt 中设置
+# Set in ai_agent_config.txt
 [LOGGING]
 LEVEL = DEBUG
 FILE = ai_agent.log
 ```
 
-**查看 API 调用日志**:
+**View API Call Logs**:
 
 ```bash
 tail -f Python/Gate/ai_agent.log
 ```
 
-### 8.8 扩展开发
+### 8.8 Extension Development
 
-#### 8.8.1 添加新的 LLM 模型
+#### 8.8.1 Adding New LLM Models
 
 ```python
-# 修改 Intent Planner 支持其他模型
+# Modify Intent Planner to support other models
 class IntentPlanner:
     def __init__(self, model_config):
         if model_config["provider"] == "zhipuai":
             self.client = ZhipuAI(api_key=model_config["api_key"])
         elif model_config["provider"] == "openai":
             self.client = OpenAI(api_key=model_config["api_key"])
-        # ... 其他模型
+        # ... other models
     
     def plan(self, user_input, device_capabilities):
-        # 统一接口，支持多种模型
+        # Unified interface, supports multiple models
         pass
 ```
 
-#### 8.8.2 自定义对话策略
+#### 8.8.2 Custom Dialog Strategy
 
 ```python
-# 修改 Dialog Manager 实现自定义策略
+# Modify Dialog Manager to implement custom strategy
 class CustomDialogManager(DialogManager):
     def handle_user_input(self, user_input):
-        # 自定义处理逻辑
+        # Custom processing logic
         context = self.get_context()
         intent = self.intent_planner.plan(user_input, context)
-        # ... 自定义逻辑
+        # ... custom logic
 ```
 
-### 8.9 最佳实践
+### 8.9 Best Practices
 
-1. **安全防护**:
-   - 不要在代码中硬编码 API Key
-   - 使用环境变量存储敏感信息
-   - 验证用户输入，防止注入攻击
+1. **Security Protection**:
+   - Do not hardcode API Key in code
+   - Use environment variables to store sensitive information
+   - Validate user input to prevent injection attacks
 
-2. **错误处理**:
-   - 捕获 API 调用异常
-   - 提供友好的错误提示
-   - 实现重试机制
+2. **Error Handling**:
+   - Catch API call exceptions
+   - Provide friendly error messages
+   - Implement retry mechanism
 
-3. **用户体验**:
-   - 保持对话上下文连贯
-   - 提供清晰的操作反馈
-   - 支持自然中断和恢复
+3. **User Experience**:
+   - Maintain coherent dialog context
+   - Provide clear operation feedback
+   - Support natural interruption and recovery
 
-4. **性能监控**:
-   - 记录 API 调用耗时
-   - 统计 Token 消耗
-   - 监控任务执行成功率
+4. **Performance Monitoring**:
+   - Record API call latency
+   - Track Token consumption
+   - Monitor task execution success rate
 
 ---
 
-## 9. 开发指南
+## 9. Development Guide
 
-### 9.1 添加新设备
+### 9.1 Adding New Devices
 
-#### 步骤1: 创建设备固件
+#### Step 1: Create Device Firmware
 
-1. **复制现有设备代码**
+1. **Copy Existing Device Code**
    ```bash
    cp -r "Device Unit code/esp8266_airconditioner_unit" \
          "Device Unit code/esp8266_new_device"
    ```
 
-2. **修改设备ID**
+2. **Modify Device ID**
    ```cpp
    // config.h
    #define DEVICE_ID "A1_new_device"
    ```
 
-3. **添加传感器代码**
-   - 根据传感器类型添加库
-   - 实现数据采集函数
-   - 更新JSON数据格式
+3. **Add Sensor Code**
+   - Add library according to sensor type
+   - Implement data collection function
+   - Update JSON data format
 
-4. **上传到ESP8266**
+4. **Upload to ESP8266**
 
-#### 步骤2: 更新网关配置
+#### Step 2: Update Gateway Configuration
 
-1. **添加设备到允许列表**
-   - 在数据库服务器中添加
-   - 测试模式: 修改 `gate_test.py` 中的默认列表
+1. **Add Device to Allowed List**
+   - Add in database server
+   - Test mode: Modify default list in `gate_test.py`
 
    ```python
    # gate_test.py:142
    return ["A1_tem_hum", "A1_curtain", "A1_security", "A1_new_device"]
    ```
 
-2. **重启网关**
+2. **Restart Gateway**
 
-#### 步骤3: 测试新设备
+#### Step 3: Test New Device
 
 ```bash
-# 使用设备模拟器测试
+# Test using device simulator
 python Python/scripts/simulator_device.py
 ```
 
-### 9.2 添加新传感器
+### 9.2 Adding New Sensors
 
-#### 设备端添加传感器
+#### Adding Sensors on Device Side
 
-1. **引入传感器库**
+1. **Include Sensor Library**
    ```cpp
    #include <SensorLibrary.h>
    ```
 
-2. **初始化传感器**
+2. **Initialize Sensor**
    ```cpp
    Sensor sensor(SENSOR_PIN);
    void setup() {
@@ -2368,14 +2372,14 @@ python Python/scripts/simulator_device.py
    }
    ```
 
-3. **采集数据**
+3. **Collect Data**
    ```cpp
    float getSensorData() {
      return sensor.read();
    }
    ```
 
-4. **添加到JSON数据**
+4. **Add to JSON Data**
    ```cpp
    void sendMsgToGate() {
      StaticJsonDocument<200> msg;
@@ -2385,9 +2389,9 @@ python Python/scripts/simulator_device.py
    }
    ```
 
-#### 网关端添加字段
+#### Adding Fields on Gateway Side
 
-1. **定义字段常量**
+1. **Define Field Constants**
    ```python
    # common/constants.py
    FIELD_NEW_SENSOR = "NewSensor"
@@ -2398,57 +2402,57 @@ python Python/scripts/simulator_device.py
    }
    ```
 
-2. **更新数据库表**
+2. **Update Database Table**
    ```sql
    ALTER TABLE gate_local_data
    ADD COLUMN new_sensor FLOAT(5) NULL;
    ```
 
-### 9.3 添加新控制指令
+### 9.3 Adding New Control Commands
 
-#### Android端添加指令
+#### Adding Commands on Android Side
 
-1. **添加按钮UI**
+1. **Add Button UI**
    ```xml
    <Button
        android:id="@+id/btn_new_control"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:text="新控制" />
+       android:text="New Control" />
    ```
 
-2. **添加点击事件**
+2. **Add Click Event**
    ```java
    btnNewControl.setOnClickListener(v -> {
        sendControl("new_control_op", "1");
    });
    ```
 
-3. **发送指令**
+3. **Send Command**
    ```java
    void sendControl(String op, String data) {
        JSONObject json = new JSONObject();
        json.put("op", op);
        json.put("data", data);
        json.put("status", "1");
-       // 发送到网关...
+       // Send to gateway...
    }
    ```
 
-#### 网关端添加处理
+#### Adding Processing on Gateway Side
 
-1. **添加操作码处理**
+1. **Add Operation Code Processing**
    ```python
    # android_handler.py
    elif operation == "new_control_op":
-       # 处理新指令
-       logger.info("收到新控制指令: %s", operation_value)
-       # 更新状态或阈值
+       # Handle new command
+       logger.info("Received new control command: %s", operation_value)
+       # Update status or threshold
    ```
 
-#### 设备端添加控制
+#### Adding Control on Device Side
 
-1. **接收控制数据**
+1. **Receive Control Data**
    ```cpp
    void getMsgFromGate() {
        if(client.available()){
@@ -2456,14 +2460,14 @@ python Python/scripts/simulator_device.py
            String jsonStr = client.readStringUntil('\n');
            deserializeJson(msg, jsonStr);
            
-           // 接收新控制字段
+           // Receive new control field
            int newControl = msg["NewControl"];
            Serial.println("RECV:" + jsonStr);
        }
    }
    ```
 
-2. **执行控制**
+2. **Execute Control**
    ```cpp
    void controlDevice() {
        if(newControl == 1) {
@@ -2474,185 +2478,185 @@ python Python/scripts/simulator_device.py
    }
    ```
 
-### 9.4 修改通信频率
+### 9.4 Modifying Communication Frequency
 
-#### 修改设备发送频率
+#### Modifying Device Send Frequency
 
 ```cpp
 // config.h
-#define SEND_INTERVAL 3  // 修改为3秒
+#define SEND_INTERVAL 3  // Change to 3 seconds
 
-// 或在代码中修改
+// Or modify in code
 SendTicker.attach(SEND_INTERVAL, sendMsgToGate);
 ```
 
-#### 修改网关接收频率
+#### Modifying Gateway Receive Frequency
 
 ```python
 # common/constants.py
-SENSOR_RECV_INTERVAL = 3  # 修改为3秒
+SENSOR_RECV_INTERVAL = 3  # Change to 3 seconds
 SENSOR_SEND_INTERVAL = 3
 ```
 
-#### 修改Android接收频率
+#### Modifying Android Receive Frequency
 
 ```python
 # common/constants.py
-ANDROID_SEND_INTERVAL = 3  # 修改为3秒
+ANDROID_SEND_INTERVAL = 3  # Change to 3 seconds
 ```
 
-### 9.5 调试技巧
+### 9.5 Debugging Tips
 
-#### Python网关调试
+#### Python Gateway Debugging
 
-1. **启用详细日志**
+1. **Enable Verbose Logging**
    ```python
    # log_setup.py
    logging.basicConfig(level=logging.DEBUG)
    ```
 
-2. **查看日志文件**
+2. **View Log Files**
    ```bash
    tail -f Python/Gate/gate.log
    ```
 
-3. **使用测试模式**
+3. **Use Test Mode**
    ```bash
    python gate_test.py --test
    ```
 
-#### 设备端调试
+#### Device Side Debugging
 
-1. **使用串口监视器**
-   - 波特率: 115200
-   - 观察输出信息
+1. **Use Serial Monitor**
+   - Baud rate: 115200
+   - Observe output information
 
-2. **添加调试输出**
+2. **Add Debug Output**
    ```cpp
    Serial.println("Debug: current value = " + String(value));
    ```
 
-#### Android端调试
+#### Android Side Debugging
 
-1. **查看Logcat**
+1. **View Logcat**
    ```bash
    adb logcat | grep MyApplication
    ```
 
-2. **添加日志**
+2. **Add Logs**
    ```java
    Log.d("MyTag", "Debug message");
    ```
 
 ---
 
-## 10. API参考
+## 10. API Reference
 
-### 10.1 Python网关API
+### 10.1 Python Gateway API
 
-#### 核心模块
+#### Core Modules
 
 ##### gateway_state.py
 
 ```python
 class GatewayState:
-    """网关共享状态管理"""
+    """Gateway shared state management"""
     
     def __init__(self):
-        """初始化状态"""
+        """Initialize state"""
         
     def update_data(self, data: dict) -> None:
-        """更新传感器数据"""
+        """Update sensor data"""
         
     def set_threshold(self, field: str, value) -> None:
-        """设置阈值"""
+        """Set threshold"""
         
     def get_data_snapshot(self) -> dict:
-        """获取数据快照"""
+        """Get data snapshot"""
         
     def is_device_permitted(self, device_id: str) -> bool:
-        """检查设备是否允许连接"""
+        """Check if device is allowed to connect"""
 ```
 
 ##### sensor_handler.py
 
 ```python
 def sensor_handler(gate_config, state: GatewayState) -> None:
-    """设备节点通信主监听线程"""
+    """Device node communication main listening thread"""
     
 def sensor_client_handler(cs: socket.socket, state: GatewayState) -> None:
-    """处理单个设备节点的连接"""
+    """Handle connection of single device node"""
 ```
 
 ##### android_handler.py
 
 ```python
 class AndroidHandler:
-    """移动应用通信处理器"""
+    """Mobile application communication handler"""
     
     def __init__(self, db_socket: socket.socket, config_dir):
-        """初始化处理器"""
+        """Initialize handler"""
         
     def android_handler(self, gate_network_config, state: GatewayState) -> None:
-        """移动应用通信主监听线程"""
+        """Mobile application communication main listening thread"""
 ```
 
 ##### database.py
 
 ```python
 def init_gate_database(db_config: GateDbConfig) -> MySQLConnection:
-    """初始化网关本地数据库"""
+    """Initialize gateway local database"""
     
 def save_sensor_data(conn: MySQLConnection, data: dict) -> None:
-    """将传感器数据存入本地数据库"""
+    """Save sensor data to local database"""
 ```
 
-#### 通信协议API
+#### Communication Protocol API
 
 ```python
 from common.protocol import send_json, recv_json, send_line, recv_line
 
 def send_json(sock: socket.socket, obj: Any) -> None:
-    """发送JSON数据"""
+    """Send JSON data"""
     
 def recv_json(sock: socket.socket, bufsize: int = 4096) -> Any:
-    """接收JSON数据"""
+    """Receive JSON data"""
     
 def send_line(sock: socket.socket, message: str) -> None:
-    """发送文本行"""
+    """Send text line"""
     
 def recv_line(sock: socket.socket, bufsize: int = 4096) -> str:
-    """接收文本行"""
+    """Receive text line"""
 ```
 
-### 10.2 设备端API
+### 10.2 Device Side API
 
-#### 核心函数
+#### Core Functions
 
 ```cpp
-// WiFi初始化
+// WiFi initialization
 void wifiInit(const char *ssid, const char *password);
 
-// 门禁监听
+// Door access listening
 void listen_door_secur_access();
 
-// 发送数据到网关
+// Send data to gateway
 void sendMsgToGate();
 
-// 从网关接收数据
+// Receive data from gateway
 void getMsgFromGate();
 
-// 控制设备
+// Control device
 void controlDevice();
 
-// 温湿度采集
+// Temperature and humidity collection
 void getTemperature_Humidity();
 
-// 光照状态获取
+// Light status acquisition
 void getLightStatus();
 ```
 
-#### 配置宏
+#### Configuration Macros
 
 ```cpp
 #define DEVICE_ID "A1_tem_hum"
@@ -2661,7 +2665,7 @@ void getLightStatus();
 #define WIFI_SSID "your_wifi_ssid"
 #define WIFI_PASSWORD "your_wifi_password"
 
-// 传感器配置
+// Sensor configuration
 #define DHT_PIN D7
 #define DHT_TYPE DHT11
 #define LED_PIN D6
@@ -2669,113 +2673,113 @@ void getLightStatus();
 #define RECV_INTERVAL 3
 ```
 
-### 10.3 Android端API
+### 10.3 Android Side API
 
-#### 网络通信
+#### Network Communication
 
 ```java
 public class GatewayClient {
-    // 连接网关
+    // Connect to gateway
     public boolean connect(String ip, int port);
     
-    // 发送登录请求
+    // Send login request
     public boolean login(String username, String password);
     
-    // 发送控制指令
+    // Send control command
     public void sendControl(String operation, String data);
     
-    // 接收传感器数据
+    // Receive sensor data
     public JSONObject receiveSensorData();
     
-    // 断开连接
+    // Disconnect
     public void disconnect();
 }
 ```
 
-#### 配置管理
+#### Configuration Management
 
 ```java
 public class ConfigManager {
-    // 读取配置
+    // Read configuration
     public Properties loadConfig(Context context);
     
-    // 保存配置
+    // Save configuration
     public void saveConfig(Context context, String ip, int port);
 }
 ```
 
 ---
 
-## 11. 故障排查
+## 11. Troubleshooting
 
-### 11.1 常见问题
+### 11.1 Common Issues
 
-#### 网关无法启动
+#### Gateway Cannot Start
 
-**症状**: Python脚本运行失败
+**Symptom**: Python script fails to run
 
-**可能原因**:
-1. 端口被占用
-2. 配置文件错误
-3. 数据库连接失败
+**Possible Causes**:
+1. Port occupied
+2. Configuration file error
+3. Database connection failed
 
-**解决方法**:
+**Solution**:
 ```bash
-# 检查端口占用
+# Check port occupation
 netstat -ano | findstr "9300"
 netstat -ano | findstr "9301"
 
-# 检查配置文件
+# Check configuration file
 cat Python/Gate/GateConfig.txt
 
-# 检查数据库连接
+# Check database connection
 mysql -u root -p1234 -e "USE gate_database; SELECT * FROM gate_local_data LIMIT 1;"
 ```
 
-#### 设备无法连接网关
+#### Device Cannot Connect to Gateway
 
-**症状**: ESP8266显示"网关连接失败"
+**Symptom**: ESP8266 displays "Gateway connection failed"
 
-**可能原因**:
-1. WiFi连接失败
-2. 网关IP错误
-3. 端口错误
-4. 网关未启动
+**Possible Causes**:
+1. WiFi connection failed
+2. Gateway IP error
+3. Port error
+4. Gateway not started
 
-**解决方法**:
+**Solution**:
 ```cpp
-// 检查WiFi连接
-Serial.print("WiFi状态: ");
+// Check WiFi connection
+Serial.print("WiFi status: ");
 Serial.println(WiFi.status());  // WL_CONNECTED = 3
 
-// 检查网关IP
-Serial.print("网关IP: ");
+// Check gateway IP
+Serial.print("Gateway IP: ");
 Serial.println(GATEWAY_IP);
 
-// 检查端口
-Serial.print("网关端口: ");
+// Check port
+Serial.print("Gateway port: ");
 Serial.println(GATEWAY_PORT);
 ```
 
-#### Android无法连接网关
+#### Android Cannot Connect to Gateway
 
-**症状**: 连接超时或连接被拒绝
+**Symptom**: Connection timeout or connection refused
 
-**可能原因**:
-1. 网络不通
-2. IP或端口错误
-3. 网关未启动
-4. 防火墙阻止
+**Possible Causes**:
+1. Network not reachable
+2. IP or port error
+3. Gateway not started
+4. Firewall blocking
 
-**解决方法**:
+**Solution**:
 ```bash
-# 测试网络连通性
+# Test network connectivity
 ping 192.168.1.107
 
-# 测试端口开放
+# Test if port is open
 telnet 192.168.1.107 9301
 
-# 检查防火墙
+# Check firewall
 # Windows
 netsh advfirewall firewall show rule name=all
 
@@ -2783,96 +2787,96 @@ netsh advfirewall firewall show rule name=all
 sudo iptables -L
 ```
 
-#### 数据库连接失败
+#### Database Connection Failed
 
-**症状**: "数据库连接失败"错误
+**Symptom**: "Database connection failed" error
 
-**可能原因**:
-1. MySQL服务未启动
-2. 用户名或密码错误
-3. 数据库不存在
+**Possible Causes**:
+1. MySQL service not started
+2. Username or password error
+3. Database does not exist
 
-**解决方法**:
+**Solution**:
 ```bash
-# 检查MySQL服务
+# Check MySQL service
 # Windows
 sc query MySQL
 
 # Linux
 sudo systemctl status mysql
 
-# 测试连接
+# Test connection
 mysql -u root -p1234 -e "SHOW DATABASES;"
 
-# 创建数据库
+# Create database
 mysql -u root -p1234 -e "CREATE DATABASE IF NOT EXISTS gate_database;"
 ```
 
-### 11.2 日志分析
+### 11.2 Log Analysis
 
-#### 网关日志位置
+#### Gateway Log Locations
 
 ```
 Python/Gate/gate.log
 Python/Gate/gate_test.log
 ```
 
-#### 关键日志信息
+#### Key Log Information
 
-**设备连接**:
+**Device Connection**:
 ```
-INFO 设备节点通信端口已开启: 192.168.1.107:9300
-INFO 设备节点连接: ('192.168.1.108', 12345)
-INFO 设备节点 'A1_tem_hum' 已连入网关
-```
-
-**Android连接**:
-```
-INFO 移动应用通信端口已开启: 192.168.1.107:9301
-INFO 移动应用连接: ('192.168.1.109', 54321)
-INFO 用户 'Jiang' 登录成功
+INFO Device node communication port opened: 192.168.1.107:9300
+INFO Device node connected: ('192.168.1.108', 12345)
+INFO Device node 'A1_tem_hum' connected to gateway
 ```
 
-**错误日志**:
+**Android Connection**:
 ```
-ERROR 设备节点接收数据连接断开: [Errno 10054] 远程主机强迫关闭了一个现有的连接
-ERROR 移动应用发送连接断开: [Errno 10053] 您的主机中的软件中止了一个已建立的连接
-ERROR JSON 解析失败: Expecting property name enclosed in double quotes
+INFO Mobile application communication port opened: 192.168.1.107:9301
+INFO Mobile application connected: ('192.168.1.109', 54321)
+INFO User 'Jiang' logged in successfully
 ```
 
-### 11.3 调试工具
+**Error Logs**:
+```
+ERROR Device node receive data connection disconnected: [Errno 10054] An existing connection was forcibly closed by the remote host
+ERROR Mobile application send connection disconnected: [Errno 10053] An established connection was aborted by the software in your host
+ERROR JSON parsing failed: Expecting property name enclosed in double quotes
+```
 
-#### 集成测试工具
+### 11.3 Debugging Tools
+
+#### Integration Testing Tool
 
 ```bash
-# 运行集成测试
+# Run integration tests
 python Python/scripts/run_integration_test.py
 ```
 
-#### 健康检查工具
+#### Health Check Tool
 
 ```bash
-# 运行健康检查
+# Run health check
 python Python/scripts/health_check.py
 ```
 
-#### 设备模拟器
+#### Device Simulator
 
 ```bash
-# 模拟设备连接
+# Simulate device connection
 python Python/scripts/simulator_device.py
 
-# 模拟Android连接
+# Simulate Android connection
 python Python/scripts/simulator_android.py
 ```
 
 ---
 
-## 12. 附录
+## 12. Appendix
 
-### 12.1 配置文件模板
+### 12.1 Configuration File Templates
 
-#### GateConfig.txt 模板
+#### GateConfig.txt Template
 
 ```
 192.168.1.107
@@ -2885,7 +2889,7 @@ root
 gate_database
 ```
 
-#### UserConfig.txt 模板
+#### UserConfig.txt Template
 
 ```
 Jiang
@@ -2893,31 +2897,31 @@ pwd
 A1
 ```
 
-#### config.h 模板
+#### config.h Template
 
 ```cpp
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// 设备配置
+// Device configuration
 #define DEVICE_ID "A1_tem_hum"
 #define GATEWAY_IP "192.168.1.107"
 #define GATEWAY_PORT 9300
 
-// WiFi配置
+// WiFi configuration
 #define WIFI_SSID "your_wifi_ssid"
 #define WIFI_PASSWORD "your_wifi_password"
 
-// 传感器配置
+// Sensor configuration
 #define DHT_PIN D7
 #define DHT_TYPE DHT11
 #define LED_PIN D6
 
-// 通信间隔 (秒)
+// Communication interval (seconds)
 #define SEND_INTERVAL 3
 #define RECV_INTERVAL 3
 
-// OLED配置
+// OLED configuration
 #define OLED_SDA_PIN D2
 #define OLED_SCL_PIN D1
 #define OLED_RESET_PIN -1
@@ -2925,9 +2929,9 @@ A1
 #endif
 ```
 
-### 12.2 数据库表结构
+### 12.2 Database Table Structure
 
-#### gate_local_data 表
+#### gate_local_data Table
 
 ```sql
 CREATE TABLE IF NOT EXISTS `gate_local_data` (
@@ -2941,46 +2945,46 @@ CREATE TABLE IF NOT EXISTS `gate_local_data` (
 );
 ```
 
-### 12.3 常量定义
+### 12.3 Constant Definitions
 
 ```python
 # common/constants.py
 
-# TCP端口
+# TCP ports
 PORT_SENSOR = 9300
 PORT_ANDROID = 9301
 PORT_DB_SERVER = 9302
 
-# 消息终止符
+# Message terminator
 MSG_TERMINATOR = "\n"
 
-# 缓冲区大小
+# Buffer size
 BUFFER_SIZE_SMALL = 1024
 BUFFER_SIZE_MEDIUM = 10240
 BUFFER_SIZE_LARGE = 4096
 
-# 监听队列长度
+# Listen queue length
 LISTEN_BACKLOG = 128
 
-# 数据库
+# Database
 DB_HOST = "localhost"
 DB_PORT = 3306
 
-# 通信间隔 (秒)
+# Communication interval (seconds)
 SENSOR_SEND_INTERVAL = 3
 SENSOR_RECV_INTERVAL = 3
 ANDROID_SEND_INTERVAL = 3
 ANDROID_RECV_INTERVAL = 3
 ALIYUN_UPLOAD_INTERVAL = 5
 
-# MQTT端口
+# MQTT port
 ALIYUN_MQTT_PORT = 1883
 
-# 门禁状态
+# Door access status
 DOOR_DENIED = 0
 DOOR_GRANTED = 1
 
-# 数据字段
+# Data fields
 FIELD_DOOR_CARD_ID = "Door_Secur_Card_id"
 FIELD_DOOR_STATUS = "Door_Security_Status"
 FIELD_LIGHT_TH = "Light_TH"
@@ -2991,7 +2995,7 @@ FIELD_BRIGHTNESS = "Brightness"
 FIELD_CURTAIN_STATUS = "Curtain_status"
 FIELD_DEVICE_KEY = "device_key"
 
-# 默认数据
+# Default data
 DEFAULT_SENSOR_DATA = {
     FIELD_DOOR_CARD_ID: "",
     FIELD_DOOR_STATUS: 0,
@@ -3011,21 +3015,21 @@ DEFAULT_THRESHOLD_DATA = {
 }
 ```
 
-### 12.4 相关文档
+### 12.4 Related Documents
 
-- [README.md](README.md) - 项目概述
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - 部署指南
-- [GATEWAY_TEST_REPORT.md](GATEWAY_TEST_REPORT.md) - 测试报告
-- [OPTIMIZATION_REPORT.md](OPTIMIZATION_REPORT.md) - 优化报告
+- [README.md](README.md) - Project Overview
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deployment Guide
+- [GATEWAY_TEST_REPORT.md](GATEWAY_TEST_REPORT.md) - Test Report
+- [OPTIMIZATION_REPORT.md](OPTIMIZATION_REPORT.md) - Optimization Report
 
-### 12.5 技术支持
+### 12.5 Technical Support
 
-**问题反馈**: 提交Issue到项目仓库  
-**文档更新**: 定期更新开发者文档  
-**版本发布**: 遵循语义化版本规范
+**Issue Reporting**: Submit issues to the project repository  
+**Documentation Updates**: Regularly update developer documentation  
+**Version Release**: Follow semantic versioning specification
 
 ---
 
-**文档版本**: v1.0  
-**最后更新**: 2026年4月6日  
-  **维护者**: PandaKing
+**Document Version**: v1.0  
+**Last Updated**: April 6, 2026  
+**Maintainer**: PandaKing

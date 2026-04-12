@@ -23,7 +23,7 @@ public class DeveloperActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_developer);
-    setTitle("开发者选项");
+    setTitle("Developer Options");
 
     et_Ip = (EditText)findViewById(R.id.ip);
     et_Port = (EditText)findViewById(R.id.port);
@@ -45,10 +45,10 @@ public class DeveloperActivity extends Activity {
             String port = et_Port.getText().toString();
 
             try {
-                // 读取配置文件
+                //Read configuration file
                 configEditor.readProperties();
 
-                // 修改配置文件中的键值对
+                //Modify key-value pairs in configuration file
                 configEditor.writeProperties("ip", ip);
                 configEditor.writeProperties("port", port);
             } catch (Exception e) {

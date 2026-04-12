@@ -1,6 +1,6 @@
-"""设备控制接口模块。
+"""Device control interface module.
 
-统一封装设备控制API,与GatewayState集成。
+Unified encapsulation of device control API, integrated with GatewayState.
 """
 
 import logging
@@ -13,37 +13,37 @@ logger = logging.getLogger(__name__)
 
 
 class DeviceController:
-    """设备控制器,统一封装设备控制API。
+    """Device controller, unified encapsulation of device control API.
 
-    将抽象的设备操作映射到GatewayState的阈值设置。
+    Maps abstract device operations to GatewayState threshold settings.
 
     Attributes:
-        state: GatewayState实例
+        state: GatewayState instance
     """
 
     def __init__(self, state: "GatewayState") -> None:
-        """初始化设备控制器。
+        """Initialize device controller.
 
         Args:
-            state: 网关共享状态对象
+            state: Gateway shared state object
         """
         self.state = state
 
     def execute_action(
         self, device_id: str, action: str, value: Optional[Any] = None
     ) -> Dict:
-        """执行设备动作。
+        """Execute device action.
 
         Args:
-            device_id: 设备ID(如"Light_TH", "Curtain_status")
-            action: 动作名称(如"set_temperature", "open")
-            value: 参数值,可选
+            device_id: Device ID (e.g., "Light_TH", "Curtain_status")
+            action: Action name (e.g., "set_temperature", "open")
+            value: Parameter value, optional
 
         Returns:
-            Dict: 执行结果 {"success": bool, "message": str}
+            Dict: Execution result {"success": bool, "message": str}
         """
         try:
-            # 根据设备类型和动作执行相应操作
+            # Execute corresponding operation based on device type and action
             if device_id == "Light_TH":
                 return self._control_air_conditioner(action, value)
             elif device_id == "Curtain_status":
@@ -53,200 +53,200 @@ class DeviceController:
             elif device_id == "Door_Security_Status":
                 return self._control_door(action, value)
             else:
-                logger.warning("未知设备ID: %s", device_id)
+                logger.warning("Unknown device ID: %s", device_id)
                 return {
                     "success": False,
-                    "message": f"未知设备: {device_id}",
+                    "message": f"Unknown device: {device_id}",
                 }
 
         except Exception as error:
-            logger.error("执行设备动作失败: %s", error, exc_info=True)
+            logger.error("Failed to execute device action: %s", error, exc_info=True)
             return {
                 "success": False,
-                "message": f"执行失败: {str(error)}",
+                "message": f"Execution failed: {str(error)}",
             }
 
     def _control_air_conditioner(
         self, action: str, value: Optional[Any]
     ) -> Dict:
-        """控制智能空调。
+        """Control smart air conditioner.
 
         Args:
-            action: 动作名称
-            value: 参数值
+            action: Action name
+            value: Parameter value
 
         Returns:
-            Dict: 执行结果
+            Dict: Execution result
         """
         from common.constants import FIELD_TEMPERATURE, FIELD_HUMIDITY
 
         if action == "turn_on":
-            # 开启空调
+            # Turn on AC
             self.state.set_threshold(FIELD_TEMPERATURE, -1)
             self.state.set_threshold(FIELD_HUMIDITY, -1)
-            logger.info("智能空调已开启")
-            return {"success": True, "message": "智能空调已开启"}
+            logger.info("Smart AC turned on")
+            return {"success": True, "message": "Smart AC turned on"}
 
         elif action == "turn_off":
-            # 关闭空调
+            # Turn off AC
             self.state.set_threshold(FIELD_TEMPERATURE, 101)
             self.state.set_threshold(FIELD_HUMIDITY, 101)
-            logger.info("智能空调已关闭")
-            return {"success": True, "message": "智能空调已关闭"}
+            logger.info("Smart AC turned off")
+            return {"success": True, "message": "Smart AC turned off"}
 
         elif action == "set_temperature":
-            # 设置温度
+            # Set temperature
             if value is None:
-                return {"success": False, "message": "缺少温度参数"}
+                return {"success": False, "message": "Missing temperature parameter"}
             temperature = int(value)
             if not (16 <= temperature <= 30):
                 return {
                     "success": False,
-                    "message": f"温度超出范围(16-30): {temperature}",
+                    "message": f"Temperature out of range (16-30): {temperature}",
                 }
             self.state.set_threshold(FIELD_TEMPERATURE, temperature)
-            logger.info("设置温度阈值: %d°C", temperature)
+            logger.info("Set temperature threshold: %d°C", temperature)
             return {
                 "success": True,
-                "message": f"温度已设置为 {temperature}°C",
+                "message": f"Temperature set to {temperature}°C",
             }
 
         elif action == "set_humidity":
-            # 设置湿度
+            # Set humidity
             if value is None:
-                return {"success": False, "message": "缺少湿度参数"}
+                return {"success": False, "message": "Missing humidity parameter"}
             humidity = int(value)
             if not (30 <= humidity <= 90):
                 return {
                     "success": False,
-                    "message": f"湿度超出范围(30-90): {humidity}",
+                    "message": f"Humidity out of range (30-90): {humidity}",
                 }
             self.state.set_threshold(FIELD_HUMIDITY, humidity)
-            logger.info("设置湿度阈值: %d%%", humidity)
+            logger.info("Set humidity threshold: %d%%", humidity)
             return {
                 "success": True,
-                "message": f"湿度已设置为 {humidity}%",
+                "message": f"Humidity set to {humidity}%",
             }
 
         else:
             return {
                 "success": False,
-                "message": f"未知空调动作: {action}",
+                "message": f"Unknown AC action: {action}",
             }
 
     def _control_curtain(self, action: str, value: Optional[Any]) -> Dict:
-        """控制智能窗帘。
+        """Control smart curtain.
 
         Args:
-            action: 动作名称
-            value: 参数值
+            action: Action name
+            value: Parameter value
 
         Returns:
-            Dict: 执行结果
+            Dict: Execution result
         """
         from common.constants import FIELD_BRIGHTNESS
 
         if action == "open":
-            # 打开窗帘
+            # Open curtain
             self.state.set_threshold(FIELD_BRIGHTNESS, -2)
-            logger.info("窗帘已打开")
-            return {"success": True, "message": "窗帘已打开"}
+            logger.info("Curtain opened")
+            return {"success": True, "message": "Curtain opened"}
 
         elif action == "close":
-            # 关闭窗帘
+            # Close curtain
             self.state.set_threshold(FIELD_BRIGHTNESS, 65535)
-            logger.info("窗帘已关闭")
-            return {"success": True, "message": "窗帘已关闭"}
+            logger.info("Curtain closed")
+            return {"success": True, "message": "Curtain closed"}
 
         elif action == "set_brightness":
-            # 设置光照度阈值
+            # Set brightness threshold
             if value is None:
-                return {"success": False, "message": "缺少光照度参数"}
+                return {"success": False, "message": "Missing brightness parameter"}
             brightness = int(value)
             if not (0 <= brightness <= 65535):
                 return {
                     "success": False,
-                    "message": f"光照度超出范围(0-65535): {brightness}",
+                    "message": f"Brightness out of range (0-65535): {brightness}",
                 }
             self.state.set_threshold(FIELD_BRIGHTNESS, brightness)
-            logger.info("设置光照度阈值: %d lux", brightness)
+            logger.info("Set brightness threshold: %d lux", brightness)
             return {
                 "success": True,
-                "message": f"光照度已设置为 {brightness} lux",
+                "message": f"Brightness set to {brightness} lux",
             }
 
         else:
             return {
                 "success": False,
-                "message": f"未知窗帘动作: {action}",
+                "message": f"Unknown curtain action: {action}",
             }
 
     def _control_light(self, action: str, value: Optional[Any]) -> Dict:
-        """控制智能灯光。
+        """Control smart light.
 
         Args:
-            action: 动作名称
-            value: 参数值
+            action: Action name
+            value: Parameter value
 
         Returns:
-            Dict: 执行结果
+            Dict: Execution result
         """
         from common.constants import FIELD_BRIGHTNESS
 
         if action == "set_brightness":
-            # 设置亮度
+            # Set brightness
             if value is None:
-                return {"success": False, "message": "缺少亮度参数"}
+                return {"success": False, "message": "Missing brightness parameter"}
             brightness = int(value)
             if not (0 <= brightness <= 65535):
                 return {
                     "success": False,
-                    "message": f"亮度超出范围(0-65535): {brightness}",
+                    "message": f"Brightness out of range (0-65535): {brightness}",
                 }
             self.state.set_threshold(FIELD_BRIGHTNESS, brightness)
-            logger.info("设置灯光亮度: %d", brightness)
+            logger.info("Set light brightness: %d", brightness)
             return {
                 "success": True,
-                "message": f"灯光亮度已设置为 {brightness}",
+                "message": f"Light brightness set to {brightness}",
             }
 
         else:
             return {
                 "success": False,
-                "message": f"未知灯光动作: {action}",
+                "message": f"Unknown light action: {action}",
             }
 
     def _control_door(self, action: str, value: Optional[Any]) -> Dict:
-        """控制智能门禁。
+        """Control smart door access.
 
         Args:
-            action: 动作名称
-            value: 参数值
+            action: Action name
+            value: Parameter value
 
         Returns:
-            Dict: 执行结果
+            Dict: Execution result
         """
-        # 门禁系统由设备自动验证,网关暂不支持主动控制
+        # Door access system is automatically verified by device, gateway doesn't support active control
         return {
             "success": False,
-            "message": "门禁系统仅支持刷卡验证,不支持主动控制",
+            "message": "Door access system only supports card verification, doesn't support active control",
         }
 
     def get_device_state(self, device_id: str) -> Dict:
-        """获取设备状态。
+        """Get device status.
 
         Args:
-            device_id: 设备ID
+            device_id: Device ID
 
         Returns:
-            Dict: 设备状态字典
+            Dict: Device status dictionary
         """
         data = self.state.get_data_snapshot()
         threshold = self.state.threshold_data
 
         if device_id == "Light_TH":
             return {
-                "device": "智能空调",
+                "device": "Smart AC",
                 "temperature": data.get("Temperature", 0),
                 "humidity": data.get("Humidity", 0),
                 "temperature_threshold": threshold.get("Temperature", 0),
@@ -254,25 +254,25 @@ class DeviceController:
             }
         elif device_id == "Curtain_status":
             return {
-                "device": "智能窗帘",
+                "device": "Smart Curtain",
                 "status": data.get("Curtain_status", 0),
                 "brightness": data.get("Brightness", 0),
                 "brightness_threshold": threshold.get("Brightness", 0),
             }
         elif device_id == "Light_CU":
             return {
-                "device": "智能灯光",
+                "device": "Smart Light",
                 "brightness": data.get("Brightness", 0),
                 "brightness_threshold": threshold.get("Brightness", 0),
             }
         else:
-            return {"device": device_id, "status": "未知设备"}
+            return {"device": device_id, "status": "Unknown device"}
 
     def get_all_device_states(self) -> Dict:
-        """获取所有设备状态。
+        """Get all device statuses.
 
         Returns:
-            Dict: 所有设备状态字典
+            Dict: All device status dictionary
         """
         return {
             "Light_TH": self.get_device_state("Light_TH"),

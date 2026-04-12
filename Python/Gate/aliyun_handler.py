@@ -1,6 +1,6 @@
-"""阿里云 IoT 通信模块。
+"""Aliyun IoT communication module.
 
-负责通过 MQTT 协议将传感器数据上传到阿里云 IoT 平台。
+Responsible for uploading sensor data to Aliyun IoT platform via MQTT protocol.
 """
 
 import hashlib
@@ -28,28 +28,28 @@ logger = logging.getLogger(__name__)
 
 
 def hmacsha1(key: str, msg: str) -> str:
-    """计算 HMAC-SHA1 签名。
+    """Calculate HMAC-SHA1 signature.
 
     Args:
-        key: 密钥。
-        msg: 消息内容。
+        key: Secret key.
+        msg: Message content.
 
     Returns:
-        十六进制签名字符串。
+        Hexadecimal signature string.
     """
     return hmac_mod.new(key.encode("utf-8"), msg.encode("utf-8"), hashlib.sha1).hexdigest()
 
 
 def create_mqtt_client(iot_config: AliyunIotConfig) -> Optional[mqtt.Client]:
-    """创建阿里云 IoT MQTT 客户端。
+    """Create Aliyun IoT MQTT client.
 
-    使用 HMAC-SHA1 鉴权方式生成客户端凭证。
+    Uses HMAC-SHA1 authentication to generate client credentials.
 
     Args:
-        iot_config: 阿里云 IoT 配置。
+        iot_config: Aliyun IoT configuration.
 
     Returns:
-        配置好凭证的 MQTT 客户端，创建失败时返回 None。
+        Configured MQTT client, returns None if creation fails.
     """
     timestamp = str(int(time.time()))
     client_id = f"paho.py|securemode=3,signmethod=hmacsha1,timestamp={timestamp}|"
@@ -67,18 +67,18 @@ def create_mqtt_client(iot_config: AliyunIotConfig) -> Optional[mqtt.Client]:
         client.username_pw_set(username, password)
         return client
     except Exception as error:
-        logger.error("创建 MQTT 客户端失败: %s", error)
+        logger.error("Failed to create MQTT client: %s", error)
         return None
 
 
 def on_connect(client, userdata, flags, rc):
-    """MQTT 连接回调。"""
-    logger.info("阿里云 IoT 连接结果: %d", rc)
+    """MQTT connection callback."""
+    logger.info("Aliyun IoT connection result: %d", rc)
 
 
 def on_message(client, userdata, msg):
-    """MQTT 消息回调。"""
-    logger.info("阿里云 IoT 收到消息: %s %s", msg.topic, msg.payload)
+    """MQTT message callback."""
+    logger.info("Aliyun IoT received message: %s %s", msg.topic, msg.payload)
 
 
 def aliyun_upload_loop(
@@ -86,14 +86,14 @@ def aliyun_upload_loop(
     get_data_fn,
     wait_for_sensor_fn,
 ) -> None:
-    """阿里云数据上传主循环（运行在独立线程中）。
+    """Aliyun data upload main loop (runs in independent thread).
 
-    阻塞等待设备节点连接后，定期将传感器数据上传到阿里云 IoT。
+    Blocks and waits for device node connection, then periodically uploads sensor data to Aliyun IoT.
 
     Args:
-        iot_config: 阿里云 IoT 配置。
-        get_data_fn: 获取传感器数据快照的回调函数。
-        wait_for_sensor_fn: 等待设备节点连接的回调函数。
+        iot_config: Aliyun IoT configuration.
+        get_data_fn: Callback function to get sensor data snapshot.
+        wait_for_sensor_fn: Callback function to wait for device node connection.
     """
     host = f"{iot_config.product_key}.iot-as-mqtt.{iot_config.region_id}.aliyuncs.com"
     pub_topic = (
@@ -102,15 +102,15 @@ def aliyun_upload_loop(
 
     client = create_mqtt_client(iot_config)
     if client is None:
-        logger.error("无法创建 MQTT 客户端，阿里云上传线程退出")
+        logger.error("Unable to create MQTT client, Aliyun upload thread exiting")
         return
 
     client.on_connect = on_connect
     client.on_message = on_message
 
-    logger.info("阿里云上传线程启动，等待设备节点连接...")
+    logger.info("Aliyun upload thread started, waiting for device node connection...")
     wait_for_sensor_fn()
-    logger.info("开始向阿里云服务器发送数据")
+    logger.info("Starting to send data to Aliyun server")
 
     timestamp = 0
     while True:
@@ -133,9 +133,9 @@ def aliyun_upload_loop(
             }
 
             client.publish(pub_topic, payload=json.dumps(payload_json), qos=1)
-            logger.info("向阿里云 IoT 发送: %s", payload_json)
+            logger.info("Sent to Aliyun IoT: %s", payload_json)
 
         except Exception as error:
-            logger.error("阿里云数据上传失败: %s", error)
+            logger.error("Aliyun data upload failed: %s", error)
 
         time.sleep(ALIYUN_UPLOAD_INTERVAL)

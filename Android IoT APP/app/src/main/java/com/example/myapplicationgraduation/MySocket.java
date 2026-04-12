@@ -38,9 +38,9 @@ public class MySocket extends Socket {
     }
 
     /**
-     * 发送一行文本（自动追加换行符作为消息分隔符）。
+     * Send a line of text (automatically append newline as message delimiter).
      *
-     * @param info 要发送的文本消息（不应包含 \\n）
+     * @param info Text message to send (should not contain \\n)
      */
     public static void sendInfo(String info) throws Exception {
         OutputStreamWriter tos = getOs();

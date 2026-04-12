@@ -18,7 +18,7 @@
                 android:layout_width="200dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="门禁id:"
+                android:text="Door Lock ID:"
                 android:textSize="30dp"
                 android:textColor="@color/black" />
 
@@ -27,7 +27,7 @@
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="未设置"
+                android:text="Not Set"
                 android:textSize="35dp"
                 android:textColor="@color/black" />
         </LinearLayout>
@@ -41,7 +41,7 @@
                 android:layout_width="200dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="门禁状态:"
+                android:text="Door Lock Status:"
                 android:textSize="30dp"
                 android:textColor="@color/black" />
 

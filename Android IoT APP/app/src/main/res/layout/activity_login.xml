@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="20dp"
-            android:text="智能个人家居APP"
+            android:text="Smart Home App"
             android:textSize="30dp"
             android:textColor="@color/black"
             />
@@ -30,7 +30,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="用户名:"
+                android:text="Username:"
                 android:textSize="25sp"
                 android:textColor="@color/black"
                 />
@@ -52,7 +52,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="密    码:"
+                android:text="Password:"
                 android:textSize="25sp"
                 android:textColor="@color/black"
                 />
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/login"
                 android:layout_marginRight="60dp"
-                android:text="登陆"
+                android:text="Login"
                 android:textSize="20dp"
                 ></Button>
 
@@ -84,7 +84,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/register"
-                android:text="注册"
+                android:text="Register"
                 android:textSize="20dp"
                 ></Button>
 
@@ -97,7 +97,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/developer"
         android:layout_marginRight="60dp"
-        android:text="版本V1.0"
+        android:text="Version V1.0"
         android:textSize="20dp"/>
 
 

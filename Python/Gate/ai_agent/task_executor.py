@@ -1,6 +1,6 @@
-"""FSM任务执行器模块。
+"""FSM Task Executor Module.
 
-基于有限状态机实现任务执行和回滚机制。
+Implements task execution and rollback mechanism based on Finite State Machine.
 """
 
 import logging
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class TaskState(Enum):
-    """任务执行状态枚举。"""
+    """Task execution state enumeration."""
 
     IDLE = "idle"
     EXECUTING = "executing"
@@ -27,7 +27,7 @@ class TaskState(Enum):
 
 
 class TaskStep:
-    """任务步骤类,表示单个执行单元。"""
+    """Task step class, represents a single execution unit."""
 
     def __init__(
         self,
@@ -37,14 +37,14 @@ class TaskStep:
         timeout: int = 10,
         retry: int = 3,
     ) -> None:
-        """初始化任务步骤。
+        """Initialize task step.
 
         Args:
-            device: 设备ID
-            action: 动作名称
-            value: 参数值
-            timeout: 超时时间(秒)
-            retry: 重试次数
+            device: Device ID
+            action: Action name
+            value: Parameter value
+            timeout: Timeout in seconds
+            retry: Retry count
         """
         self.device = device
         self.action = action
@@ -56,18 +56,18 @@ class TaskStep:
 
 
 class TaskExecutor:
-    """FSM任务执行器。
+    """FSM Task Executor.
 
-    使用有限状态机管理任务执行流程,支持失败回滚。
+    Uses Finite State Machine to manage task execution flow, supports failure rollback.
 
     Attributes:
-        device_controller: 设备控制器实例
-        state: 当前FSM状态
-        current_task: 当前任务步骤列表
-        executed_steps: 已执行的步骤历史
-        enable_rollback: 是否启用回滚
-        max_retry: 最大重试次数
-        task_timeout: 任务超时时间(秒)
+        device_controller: Device controller instance
+        state: Current FSM state
+        current_task: Current task step list
+        executed_steps: Executed step history
+        enable_rollback: Whether rollback is enabled
+        max_retry: Maximum retry count
+        task_timeout: Task timeout in seconds
     """
 
     def __init__(
@@ -77,57 +77,57 @@ class TaskExecutor:
         max_retry: int = 3,
         task_timeout: int = 30,
     ) -> None:
-        """初始化任务执行器。
+        """Initialize task executor.
 
         Args:
-            device_controller: 设备控制器实例
-            enable_rollback: 是否启用回滚,默认True
-            max_retry: 最大重试次数,默认3
-            task_timeout: 任务超时时间(秒),默认30
+            device_controller: Device controller instance
+            enable_rollback: Whether to enable rollback, default True
+            max_retry: Maximum retry count, default 3
+            task_timeout: Task timeout in seconds, default 30
         """
         self.device_controller = device_controller
         self.enable_rollback = enable_rollback
         self.max_retry = max_retry
         self.task_timeout = task_timeout
 
-        # FSM状态
+        # FSM state
         self.state = TaskState.IDLE
         self._lock = threading.Lock()
 
-        # 任务管理
+        # Task management
         self.current_task: List[TaskStep] = []
         self.executed_steps: List[TaskStep] = []
 
     def execute_task_plan(self, task_plan: Dict) -> Dict:
-        """执行任务计划。
+        """Execute task plan.
 
         Args:
-            task_plan: 任务计划字典,包含tasks列表
+            task_plan: Task plan dictionary, containing tasks list
 
         Returns:
-            Dict: 执行结果 {"success": bool, "message": str, "details": list}
+            Dict: Execution result {"success": bool, "message": str, "details": list}
         """
         with self._lock:
-            # 检查当前状态
+            # Check current state
             if self.state != TaskState.IDLE:
-                logger.warning("任务执行器忙: %s", self.state.value)
+                logger.warning("Task executor busy: %s", self.state.value)
                 return {
                     "success": False,
-                    "message": f"任务执行器忙: {self.state.value}",
+                    "message": f"Task executor busy: {self.state.value}",
                     "details": [],
                 }
 
-            # 解析任务步骤
+            # Parse task steps
             tasks = task_plan.get("tasks", [])
             if not tasks:
-                logger.info("无任务需要执行")
+                logger.info("No tasks to execute")
                 return {
                     "success": True,
-                    "message": "无任务需要执行",
+                    "message": "No tasks to execute",
                     "details": [],
                 }
 
-            # 创建任务步骤
+            # Create task steps
             self.current_task = []
             for task in tasks:
                 step = TaskStep(
@@ -139,15 +139,15 @@ class TaskExecutor:
                 )
                 self.current_task.append(step)
 
-            # 更新状态为执行中
+            # Update state to executing
             self.state = TaskState.EXECUTING
             self.executed_steps = []
 
-        # 执行任务
+        # Execute task
         try:
             results = self._execute_steps()
 
-            # 检查是否所有步骤都成功
+            # Check if all steps succeeded
             all_success = all(r.get("success", False) for r in results)
 
             with self._lock:
@@ -155,22 +155,22 @@ class TaskExecutor:
 
             return {
                 "success": all_success,
-                "message": "任务执行完成" if all_success else "任务执行失败",
+                "message": "Task execution completed" if all_success else "Task execution failed",
                 "details": results,
             }
 
         except Exception as error:
-            logger.error("任务执行异常: %s", error, exc_info=True)
+            logger.error("Task execution exception: %s", error, exc_info=True)
             with self._lock:
                 self.state = TaskState.FAILED
 
-            # 执行回滚
+            # Execute rollback
             if self.enable_rollback:
                 self._rollback()
 
             return {
                 "success": False,
-                "message": f"任务执行异常: {str(error)}",
+                "message": f"Task execution exception: {str(error)}",
                 "details": [],
             }
 
@@ -178,20 +178,20 @@ class TaskExecutor:
             with self._lock:
                 if self.state in [TaskState.COMPLETED, TaskState.FAILED]:
                     self.current_task = []
-                    # 延迟重置为IDLE状态
+                    # Delay reset to IDLE state
                     threading.Timer(2.0, self._reset_to_idle).start()
 
     def _execute_steps(self) -> List[Dict]:
-        """执行任务步骤序列。
+        """Execute task step sequence.
 
         Returns:
-            List[Dict]: 每个步骤的执行结果
+            List[Dict]: Execution result of each step
         """
         results = []
 
         for i, step in enumerate(self.current_task):
             logger.info(
-                "执行步骤 %d/%d: %s.%s(%s)",
+                "Executing step %d/%d: %s.%s(%s)",
                 i + 1,
                 len(self.current_task),
                 step.device,
@@ -199,37 +199,37 @@ class TaskExecutor:
                 step.value,
             )
 
-            # 执行单个步骤(带重试)
+            # Execute single step (with retry)
             result = self._execute_step_with_retry(step)
             results.append(result)
 
             if result["success"]:
-                # 成功,记录到已执行列表
+                # Success, record to executed list
                 step.executed = True
                 step.result = result
                 self.executed_steps.append(step)
             else:
-                # 失败,根据策略决定是否继续
+                # Failed, decide whether to continue based on strategy
                 logger.error(
-                    "步骤 %d 执行失败: %s", i + 1, result.get("message")
+                    "Step %d execution failed: %s", i + 1, result.get("message")
                 )
 
-                # 如果启用回滚,执行回滚
+                # If rollback is enabled, execute rollback
                 if self.enable_rollback:
-                    logger.info("启用回滚机制")
+                    logger.info("Rollback mechanism enabled")
                     self._rollback()
                     break
 
         return results
 
     def _execute_step_with_retry(self, step: TaskStep) -> Dict:
-        """执行单个任务步骤(带重试机制)。
+        """Execute single task step (with retry mechanism).
 
         Args:
-            step: 任务步骤对象
+            step: Task step object
 
         Returns:
-            Dict: 执行结果
+            Dict: Execution result
         """
         last_error = None
 
@@ -246,20 +246,20 @@ class TaskExecutor:
                 else:
                     last_error = result.get("message")
                     logger.warning(
-                        "步骤执行失败(尝试 %d/%d): %s",
+                        "Step execution failed (attempt %d/%d): %s",
                         attempt + 1,
                         step.retry,
                         last_error,
                     )
 
-                    # 如果不是最后一次尝试,等待后重试
+                    # If not last attempt, wait and retry
                     if attempt < step.retry - 1:
                         time.sleep(1)
 
             except Exception as error:
                 last_error = str(error)
                 logger.error(
-                    "步骤执行异常(尝试 %d/%d): %s",
+                    "Step execution exception (attempt %d/%d): %s",
                     attempt + 1,
                     step.retry,
                     error,
@@ -270,28 +270,28 @@ class TaskExecutor:
 
         return {
             "success": False,
-            "message": f"执行失败(重试{step.retry}次后): {last_error}",
+            "message": f"Execution failed (after {step.retry} retries): {last_error}",
         }
 
     def _rollback(self) -> None:
-        """执行回滚操作。
+        """Execute rollback operation.
 
-        按相反顺序撤销已执行的步骤。
+        Undo executed steps in reverse order.
         """
         with self._lock:
             self.state = TaskState.ROLLBACK
 
-        logger.info("开始回滚 %d 个步骤", len(self.executed_steps))
+        logger.info("Starting rollback for %d steps", len(self.executed_steps))
 
-        # 按相反顺序执行撤销操作
+        # Execute undo operations in reverse order
         for step in reversed(self.executed_steps):
             try:
-                # 获取撤销动作
+                # Get rollback action
                 rollback_action = self._get_rollback_action(step)
 
                 if rollback_action:
                     logger.info(
-                        "回滚步骤: %s.%s(%s)",
+                        "Rollback step: %s.%s(%s)",
                         step.device,
                         rollback_action["action"],
                         rollback_action.get("value"),
@@ -304,21 +304,21 @@ class TaskExecutor:
                     )
 
             except Exception as error:
-                logger.error("回滚步骤失败: %s", error)
+                logger.error("Rollback step failed: %s", error)
 
         with self._lock:
             self.executed_steps = []
 
     def _get_rollback_action(self, step: TaskStep) -> Optional[Dict]:
-        """获取步骤的撤销动作。
+        """Get rollback action for step.
 
         Args:
-            step: 任务步骤对象
+            step: Task step object
 
         Returns:
-            Optional[Dict]: 撤销动作字典,无撤销动作返回None
+            Optional[Dict]: Rollback action dictionary, None if no rollback action exists
         """
-        # 简单的撤销映射
+        # Simple rollback mapping
         rollback_map = {
             "turn_on": {"action": "turn_off", "value": None},
             "turn_off": {"action": "turn_on", "value": None},
@@ -329,59 +329,59 @@ class TaskExecutor:
         return rollback_map.get(step.action)
 
     def _reset_to_idle(self) -> None:
-        """重置状态为IDLE。"""
+        """Reset state to IDLE."""
         with self._lock:
             self.state = TaskState.IDLE
 
     def get_state(self) -> TaskState:
-        """获取当前FSM状态。
+        """Get current FSM state.
 
         Returns:
-            TaskState: 当前状态
+            TaskState: Current state
         """
         with self._lock:
             return self.state
 
     def pause(self) -> bool:
-        """暂停任务执行。
+        """Pause task execution.
 
         Returns:
-            bool: 是否暂停成功
+            bool: Whether pause was successful
         """
         with self._lock:
             if self.state == TaskState.EXECUTING:
                 self.state = TaskState.PAUSED
-                logger.info("任务执行已暂停")
+                logger.info("Task execution paused")
                 return True
             return False
 
     def resume(self) -> bool:
-        """恢复任务执行。
+        """Resume task execution.
 
         Returns:
-            bool: 是否恢复成功
+            bool: Whether resume was successful
         """
         with self._lock:
             if self.state == TaskState.PAUSED:
                 self.state = TaskState.EXECUTING
-                logger.info("任务执行已恢复")
+                logger.info("Task execution resumed")
                 return True
             return False
 
     def cancel(self) -> bool:
-        """取消任务执行。
+        """Cancel task execution.
 
         Returns:
-            bool: 是否取消成功
+            bool: Whether cancel was successful
         """
         with self._lock:
             if self.state in [TaskState.EXECUTING, TaskState.PAUSED]:
-                # 执行回滚
+                # Execute rollback
                 if self.enable_rollback and self.executed_steps:
                     self._rollback()
 
                 self.state = TaskState.FAILED
                 self.current_task = []
-                logger.info("任务执行已取消")
+                logger.info("Task execution cancelled")
                 return True
             return False

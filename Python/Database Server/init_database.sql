@@ -1,14 +1,14 @@
--- 数据库服务器初始化脚本
--- 创建数据库和表结构
+-- Database server initialization script
+-- Create database and table structure
 
--- 创建数据库
+-- Create database
 CREATE DATABASE IF NOT EXISTS `user_test` 
 CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
 
 USE `user_test`;
 
--- 用户数据表
+-- User data table
 CREATE TABLE IF NOT EXISTS `users_data` (
   `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(100) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `users_data` (
   UNIQUE KEY `owned_device_key` (`owned_device_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 设备密钥表
+-- Device key table
 CREATE TABLE IF NOT EXISTS `device_key` (
   `key_id` VARCHAR(50) NOT NULL,
   `owned_by_user` VARCHAR(50) DEFAULT NULL,
@@ -25,26 +25,26 @@ CREATE TABLE IF NOT EXISTS `device_key` (
   PRIMARY KEY (`key_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 设备数据表
+-- Device data table
 CREATE TABLE IF NOT EXISTS `device_data` (
   `device_name` VARCHAR(50) NOT NULL,
   `bind_device_key` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`device_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 插入示例数据
--- 插入默认用户
+-- Insert sample data
+-- Insert default user
 INSERT IGNORE INTO `users_data` (`username`, `password`, `owned_device_key`)
 VALUES ('Jiang', 'pwd', 'A1');
 
--- 插入设备密钥
+-- Insert device keys
 INSERT IGNORE INTO `device_key` (`key_id`, `owned_by_user`, `is_used`)
 VALUES 
   ('A1', 'Jiang', 1),
   ('A2', NULL, 0),
   ('A3', NULL, 0);
 
--- 插入设备数据
+-- Insert device data
 INSERT IGNORE INTO `device_data` (`device_name`, `bind_device_key`)
 VALUES 
   ('A1_tem_hum', 'A1'),
@@ -54,15 +54,15 @@ VALUES
   ('A2_curtain', 'A2'),
   ('A3_tem_hum', 'A3');
 
--- 显示表结构
+-- Show table structure
 DESCRIBE `users_data`;
 DESCRIBE `device_key`;
 DESCRIBE `device_data`;
 
--- 显示示例数据
-SELECT '=== 用户数据 ===' AS '';
+-- Show sample data
+SELECT '=== User Data ===' AS '';
 SELECT * FROM `users_data`;
-SELECT '=== 设备密钥 ===' AS '';
+SELECT '=== Device Keys ===' AS '';
 SELECT * FROM `device_key`;
-SELECT '=== 设备数据 ===' AS '';
+SELECT '=== Device Data ===' AS '';
 SELECT * FROM `device_data`;

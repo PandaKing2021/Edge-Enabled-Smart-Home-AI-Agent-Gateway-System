@@ -1,4 +1,4 @@
-"""IoT 网关系统公共模块。"""
+"""IoT gateway system common modules."""
 
 from common.config import (
     GateConfig,

@@ -23,7 +23,7 @@ public class DoorSecurityActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doorsecurity);
-        setTitle("智能门禁");
+        setTitle("Smart Door Lock");
 
         tv_door_secur_id = (TextView)findViewById(R.id.door_secur_id);
         tv_door_secur_status = (TextView)findViewById(R.id.door_secur_status);
@@ -73,7 +73,7 @@ public class DoorSecurityActivity extends Activity {
 
     private void refreshViews(){
         tv_door_secur_id.setText(data[0]);
-        tv_door_secur_status.setText(data[1].equals("1")?"通过":"拒绝");
+        tv_door_secur_status.setText(data[1].equals("1")?"Approved":"Denied");
     }
 
 }

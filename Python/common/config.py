@@ -1,7 +1,7 @@
-"""网关配置管理模块。
+"""Gateway configuration management module.
 
-提供配置文件的读取、校验和加载功能，使用 dataclass 定义配置结构。
-配置文件格式保持与原始项目兼容（逐行读取，无 section header）。
+Provides configuration file reading, validation, and loading functionality, using dataclass to define configuration structure.
+Configuration file format maintains compatibility with the original project (line-by-line reading, no section header).
 """
 
 import logging
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class GateNetworkConfig:
-    """网关网络配置。"""
+    """Gateway network configuration."""
     ip: str = ""
     source_port: int = 0
     android_port: int = 0
@@ -22,14 +22,14 @@ class GateNetworkConfig:
 
 @dataclass
 class DbServerConfig:
-    """数据库服务器连接配置。"""
+    """Database server connection configuration."""
     ip: str = ""
     db_server_port: int = 0
 
 
 @dataclass
 class GateDbConfig:
-    """网关本地数据库配置。"""
+    """Gateway local database configuration."""
     user: str = ""
     password: str = ""
     database: str = ""
@@ -37,7 +37,7 @@ class GateDbConfig:
 
 @dataclass
 class UserConfig:
-    """本地授权用户配置。"""
+    """Local authorized user configuration."""
     username: str = ""
     password: str = ""
     device_key: str = ""
@@ -45,14 +45,14 @@ class UserConfig:
 
 @dataclass
 class ServerNetworkConfig:
-    """数据库服务器网络配置。"""
+    """Database server network configuration."""
     ip: str = ""
     listen_port: int = 0
 
 
 @dataclass
 class AliyunIotConfig:
-    """阿里云 IoT 连接配置。"""
+    """Aliyun IoT connection configuration."""
     product_key: str = ""
     device_name: str = ""
     device_secret: str = ""
@@ -61,7 +61,7 @@ class AliyunIotConfig:
 
 @dataclass
 class GateConfig:
-    """网关完整配置，聚合所有子配置。"""
+    """Complete gateway configuration, aggregating all sub-configurations."""
     gate_network: GateNetworkConfig = None  # type: ignore[assignment]
     db_server: DbServerConfig = None  # type: ignore[assignment]
     gate_db: GateDbConfig = None  # type: ignore[assignment]
@@ -76,19 +76,19 @@ class GateConfig:
 
 
 def _read_config_lines(filepath: Path) -> list[str]:
-    """读取配置文件的非空行，去除行尾换行符。
+    """Read non-empty lines from configuration file, removing trailing newlines.
 
     Args:
-        filepath: 配置文件路径。
+        filepath: Configuration file path.
 
     Returns:
-        非空行列表。
+        List of non-empty lines.
 
     Raises:
-        FileNotFoundError: 配置文件不存在。
+        FileNotFoundError: Configuration file does not exist.
     """
     if not filepath.exists():
-        raise FileNotFoundError(f"配置文件不存在: {filepath}")
+        raise FileNotFoundError(f"Configuration file does not exist: {filepath}")
 
     lines: list[str] = []
     with open(filepath, "r", encoding="utf-8") as f:
@@ -100,20 +100,20 @@ def _read_config_lines(filepath: Path) -> list[str]:
 
 
 def load_gate_config(config_dir: Optional[Path] = None) -> GateConfig:
-    """从 GateConfig.txt 加载网关配置。
+    """Load gateway configuration from GateConfig.txt.
 
-    文件格式（8行）：
-        网关IP / 数据库服务器IP / 设备节点端口 / Android端口 /
-        数据库服务器端口 / MySQL用户名 / MySQL密码 / 数据库名
+    File format (8 lines):
+        Gateway IP / Database server IP / Device node port / Android port /
+        Database server port / MySQL username / MySQL password / Database name
 
     Args:
-        config_dir: 配置文件所在目录，默认为当前目录。
+        config_dir: Directory where configuration file is located, defaults to current directory.
 
     Returns:
-        GateConfig 配置对象。
+        GateConfig configuration object.
 
     Raises:
-        ValueError: 配置项不足或格式错误。
+        ValueError: Insufficient configuration items or format error.
     """
     if config_dir is None:
         config_dir = Path.cwd()
@@ -122,7 +122,7 @@ def load_gate_config(config_dir: Optional[Path] = None) -> GateConfig:
     lines = _read_config_lines(filepath)
 
     if len(lines) < 8:
-        raise ValueError(f"GateConfig.txt 配置项不足，需要8行，实际{len(lines)}行")
+        raise ValueError(f"GateConfig.txt has insufficient configuration items, need 8 lines, actual {len(lines)} lines")
 
     config = GateConfig(
         gate_network=GateNetworkConfig(
@@ -141,25 +141,25 @@ def load_gate_config(config_dir: Optional[Path] = None) -> GateConfig:
         ),
     )
 
-    logger.info("网关配置加载成功: 网关IP=%s, 设备端口=%d, Android端口=%d",
+    logger.info("Gateway configuration loaded successfully: Gateway IP=%s, Device port=%d, Android port=%d",
                 config.gate_network.ip, config.gate_network.source_port,
                 config.gate_network.android_port)
     return config
 
 
 def load_user_config(config_dir: Optional[Path] = None) -> UserConfig:
-    """从 UserConfig.txt 加载本地用户配置。
+    """Load local user configuration from UserConfig.txt.
 
-    文件格式（3行）：用户名 / 密码 / 设备密钥
+    File format (3 lines): Username / Password / Device key
 
     Args:
-        config_dir: 配置文件所在目录，默认为当前目录。
+        config_dir: Directory where configuration file is located, defaults to current directory.
 
     Returns:
-        UserConfig 配置对象。
+        UserConfig configuration object.
 
     Raises:
-        ValueError: 配置项不足。
+        ValueError: Insufficient configuration items.
     """
     if config_dir is None:
         config_dir = Path.cwd()
@@ -168,19 +168,19 @@ def load_user_config(config_dir: Optional[Path] = None) -> UserConfig:
     lines = _read_config_lines(filepath)
 
     if len(lines) < 3:
-        raise ValueError(f"UserConfig.txt 配置项不足，需要3行，实际{len(lines)}行")
+        raise ValueError(f"UserConfig.txt has insufficient configuration items, need 3 lines, actual {len(lines)} lines")
 
     config = UserConfig(username=lines[0], password=lines[1], device_key=lines[2])
-    logger.info("用户配置加载成功: 用户名=%s", config.username)
+    logger.info("User configuration loaded successfully: Username=%s", config.username)
     return config
 
 
 def write_user_config(config: UserConfig, config_dir: Optional[Path] = None) -> None:
-    """将用户配置写入 UserConfig.txt。
+    """Write user configuration to UserConfig.txt.
 
     Args:
-        config: 用户配置对象。
-        config_dir: 配置文件所在目录，默认为当前目录。
+        config: User configuration object.
+        config_dir: Directory where configuration file is located, defaults to current directory.
     """
     if config_dir is None:
         config_dir = Path.cwd()
@@ -188,22 +188,22 @@ def write_user_config(config: UserConfig, config_dir: Optional[Path] = None) -> 
     filepath = config_dir / "UserConfig.txt"
     content = f"{config.username}\n{config.password}\n{config.device_key}\n"
     filepath.write_text(content, encoding="utf-8")
-    logger.info("用户配置已写入: %s", filepath)
+    logger.info("User configuration written to: %s", filepath)
 
 
 def load_server_config(config_dir: Optional[Path] = None) -> ServerNetworkConfig:
-    """从 serverConfig.txt 加载数据库服务器配置。
+    """Load database server configuration from serverConfig.txt.
 
-    文件格式（2行）：服务器IP / 监听端口
+    File format (2 lines): Server IP / Listen port
 
     Args:
-        config_dir: 配置文件所在目录，默认为当前目录。
+        config_dir: Directory where configuration file is located, defaults to current directory.
 
     Returns:
-        ServerNetworkConfig 配置对象。
+        ServerNetworkConfig configuration object.
 
     Raises:
-        ValueError: 配置项不足。
+        ValueError: Insufficient configuration items.
     """
     if config_dir is None:
         config_dir = Path.cwd()
@@ -212,8 +212,8 @@ def load_server_config(config_dir: Optional[Path] = None) -> ServerNetworkConfig
     lines = _read_config_lines(filepath)
 
     if len(lines) < 2:
-        raise ValueError(f"serverConfig.txt 配置项不足，需要2行，实际{len(lines)}行")
+        raise ValueError(f"serverConfig.txt has insufficient configuration items, need 2 lines, actual {len(lines)} lines")
 
     config = ServerNetworkConfig(ip=lines[0], listen_port=int(lines[1]))
-    logger.info("数据库服务器配置加载成功: IP=%s, 端口=%d", config.ip, config.listen_port)
+    logger.info("Database server configuration loaded successfully: IP=%s, Port=%d", config.ip, config.listen_port)
     return config

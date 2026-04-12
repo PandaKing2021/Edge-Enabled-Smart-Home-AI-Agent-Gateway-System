@@ -10,10 +10,10 @@ import java.util.Properties;
 
 public class ConfigPropertiesEditor {
     File extDir = Environment.getExternalStorageDirectory();
-    private String filePath = "config.properties"; // 配置文件路径
+    private String filePath = "config.properties"; //Configuration file path
 
     public ConfigPropertiesEditor() {
-        // 初始化配置文件路径
+        //Initialize configuration file path
     }
 
     public void readProperties() {
@@ -30,10 +30,10 @@ public class ConfigPropertiesEditor {
             Properties prop = new Properties();
             prop.load(new FileInputStream(filePath));
 
-            // 修改键值对
+            //Modify key-value pair
             prop.setProperty(key, value);
 
-            // 保存修改后的配置文件
+            //Save modified configuration file
             prop.store(output, null);
         } catch (IOException ex) {
             ex.printStackTrace();

@@ -47,10 +47,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        System.out.println("db upgrade");
+        System.out.println("database upgrade");
     }
 
-    // 数据库的查询函数
+    //Database query function
     public Cursor rawQuery(String sql) {
         return db.rawQuery(sql, null);
     }
@@ -82,7 +82,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    // 封装系统的执行sql语句的函数
+    //Function to execute SQL statements in the system
     public boolean execSQL(String sql, Object[] object) {
         try {
             db.execSQL(sql, object);

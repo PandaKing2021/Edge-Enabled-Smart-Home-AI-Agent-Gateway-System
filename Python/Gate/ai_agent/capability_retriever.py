@@ -1,6 +1,6 @@
-"""RAG检索器模块。
+"""RAG retriever module.
 
-基于关键词匹配的轻量级设备能力检索。
+Lightweight device capability retrieval based on keyword matching.
 """
 
 import json
@@ -12,21 +12,21 @@ logger = logging.getLogger(__name__)
 
 
 class CapabilityRetriever:
-    """设备能力检索器。
+    """Device capability retriever.
 
-    从device_capabilities.json读取设备能力,基于关键词匹配进行检索。
+    Reads device capabilities from device_capabilities.json, performs retrieval based on keyword matching.
 
     Attributes:
-        capabilities_file: 设备能力配置文件路径
-        capabilities: 设备能力字典
-        scenarios: 场景字典
+        capabilities_file: Device capability configuration file path
+        capabilities: Device capability dictionary
+        scenarios: Scenario dictionary
     """
 
     def __init__(self, capabilities_file: str) -> None:
-        """初始化检索器。
+        """Initialize retriever.
 
         Args:
-            capabilities_file: 设备能力配置文件路径
+            capabilities_file: Device capability configuration file path
         """
         self.capabilities_file = capabilities_file
         self.capabilities: Dict = {}
@@ -34,10 +34,10 @@ class CapabilityRetriever:
         self._load_capabilities()
 
     def _load_capabilities(self) -> None:
-        """加载设备能力配置文件。"""
+        """Load device capability configuration file."""
         try:
             if not os.path.exists(self.capabilities_file):
-                logger.error("设备能力配置文件不存在: %s", self.capabilities_file)
+                logger.error("Device capability configuration file does not exist: %s", self.capabilities_file)
                 return
 
             with open(self.capabilities_file, "r", encoding="utf-8") as f:
@@ -46,23 +46,23 @@ class CapabilityRetriever:
             self.capabilities = data.get("devices", {})
             self.scenarios = data.get("scenarios", {})
             logger.info(
-                "加载设备能力: %d个设备, %d个场景",
+                "Loaded device capabilities: %d devices, %d scenarios",
                 len(self.capabilities),
                 len(self.scenarios),
             )
 
         except Exception as error:
-            logger.error("加载设备能力配置失败: %s", error)
+            logger.error("Failed to load device capability configuration: %s", error)
 
     def retrieve_relevant_devices(self, query: str, top_k: int = 3) -> List[Dict]:
-        """检索与查询相关的设备。
+        """Retrieve devices relevant to query.
 
         Args:
-            query: 用户查询字符串
-            top_k: 返回的top-k个最相关设备
+            query: User query string
+            top_k: Top-k most relevant devices to return
 
         Returns:
-            List[Dict]: 相关设备列表,每个元素包含device_id和device_info
+            List[Dict]: Relevant device list, each element contains device_id and device_info
         """
         query_lower = query.lower()
         scored_devices = []
@@ -72,10 +72,10 @@ class CapabilityRetriever:
             if score > 0:
                 scored_devices.append((device_id, device_info, score))
 
-        # 按相关性分数降序排序
+        # Sort by relevance score in descending order
         scored_devices.sort(key=lambda x: x[2], reverse=True)
 
-        # 返回top-k结果
+        # Return top-k results
         results = []
         for device_id, device_info, score in scored_devices[:top_k]:
             results.append(
@@ -87,7 +87,7 @@ class CapabilityRetriever:
             )
 
         logger.debug(
-            "检索查询 '%s' 返回 %d 个设备: %s",
+            "Retrieval query '%s' returned %d devices: %s",
             query,
             len(results),
             [r["device_id"] for r in results],
@@ -95,22 +95,22 @@ class CapabilityRetriever:
         return results
 
     def retrieve_scenario(self, query: str) -> Optional[Dict]:
-        """检索匹配的场景。
+        """Retrieve matching scenario.
 
         Args:
-            query: 用户查询字符串
+            query: User query string
 
         Returns:
-            Optional[Dict]: 匹配的场景信息,无匹配返回None
+            Optional[Dict]: Matched scenario information, returns None if no match
         """
         query_lower = query.lower()
 
         for scenario_id, scenario_info in self.scenarios.items():
-            # 检查场景关键词是否在查询中
+            # Check if scenario keywords are in the query
             keywords = scenario_info.get("keywords", [])
             for keyword in keywords:
                 if keyword in query_lower:
-                    logger.info("匹配场景: %s (关键词: %s)", scenario_id, keyword)
+                    logger.info("Matched scenario: %s (keyword: %s)", scenario_id, keyword)
                     return {
                         "scenario_id": scenario_id,
                         "scenario_info": scenario_info,
@@ -120,29 +120,29 @@ class CapabilityRetriever:
         return None
 
     def _calculate_relevance_score(self, query: str, device_info: Dict) -> float:
-        """计算查询与设备的相关性分数。
+        """Calculate relevance score between query and device.
 
         Args:
-            query: 查询字符串(已转小写)
-            device_info: 设备信息字典
+            query: Query string (already lowercased)
+            device_info: Device information dictionary
 
         Returns:
-            float: 相关性分数(0-10)
+            float: Relevance score (0-10)
         """
         score = 0.0
 
-        # 检查设备名称
+        # Check device name
         name = device_info.get("name", "").lower()
         name_en = device_info.get("name_en", "").lower()
         if name in query or name_en in query:
             score += 3.0
 
-        # 检查关键词
+        # Check keywords
         keywords = device_info.get("keywords", [])
         matched_keywords = sum(1 for kw in keywords if kw in query)
         score += matched_keywords * 1.5
 
-        # 检查能力描述
+        # Check capability descriptions
         capabilities = device_info.get("capabilities", [])
         for capability in capabilities:
             if capability in query:
@@ -151,13 +151,13 @@ class CapabilityRetriever:
         return score
 
     def get_device_actions(self, device_id: str) -> Optional[Dict]:
-        """获取设备的所有可用动作。
+        """Get all available actions for a device.
 
         Args:
-            device_id: 设备ID
+            device_id: Device ID
 
         Returns:
-            Optional[Dict]: 动作字典,不存在返回None
+            Optional[Dict]: Action dictionary, returns None if not exists
         """
         device_info = self.capabilities.get(device_id)
         if device_info:
@@ -165,27 +165,27 @@ class CapabilityRetriever:
         return None
 
     def get_device_info(self, device_id: str) -> Optional[Dict]:
-        """获取设备的完整信息。
+        """Get complete device information.
 
         Args:
-            device_id: 设备ID
+            device_id: Device ID
 
         Returns:
-            Optional[Dict]: 设备信息字典,不存在返回None
+            Optional[Dict]: Device information dictionary, returns None if not exists
         """
         return self.capabilities.get(device_id)
 
     def format_capabilities_for_prompt(self, devices: List[Dict]) -> str:
-        """将设备能力格式化为LLM提示文本。
+        """Format device capabilities into LLM prompt text.
 
         Args:
-            devices: 设备列表
+            devices: Device list
 
         Returns:
-            str: 格式化的设备能力描述
+            str: Formatted device capability description
         """
         if not devices:
-            return "无相关设备"
+            return "No relevant devices"
 
         parts = []
         for i, device in enumerate(devices, 1):
@@ -194,17 +194,17 @@ class CapabilityRetriever:
             score = device["relevance_score"]
 
             parts.append(f"{i}. {device_info['name']} (ID: {device_id})")
-            parts.append(f"   描述: {device_info['description']}")
-            parts.append(f"   能力: {', '.join(device_info['capabilities'])}")
+            parts.append(f"   Description: {device_info['description']}")
+            parts.append(f"   Capabilities: {', '.join(device_info['capabilities'])}")
 
-            # 列出可用动作
+            # List available actions
             actions = device_info.get("actions", {})
             if actions:
-                parts.append("   可用动作:")
+                parts.append("   Available actions:")
                 for action_name, action_info in actions.items():
                     params_desc = ""
                     if "params" in action_info and action_info["params"]:
-                        params_desc = " (参数: " + ", ".join(action_info["params"].keys()) + ")"
+                        params_desc = " (params: " + ", ".join(action_info["params"].keys()) + ")"
                     parts.append(f"     - {action_info['description']}{params_desc}")
 
             parts.append("")

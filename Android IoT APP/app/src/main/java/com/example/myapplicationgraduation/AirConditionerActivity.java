@@ -40,7 +40,7 @@ public class AirConditionerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_airconditioner);
-        setTitle("智能空调");
+        setTitle("Smart Air Conditioner");
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this,"iot_db",null,1);
         db = databaseHelper.getWritableDatabase();
@@ -167,7 +167,7 @@ public class AirConditionerActivity extends Activity {
                     });
 
                     try {
-                        Thread.sleep(1); // 更新间隔，例如每秒更新一次
+                        Thread.sleep(1); //Update interval, e.g., update once per second
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -209,7 +209,7 @@ public class AirConditionerActivity extends Activity {
         data[1] = jsonObject.getString("Temperature");
         data[2] = jsonObject.getString("Humidity");
 
-        // 插入历史记录数据库
+        //Insert into history database
         ContentValues values = new ContentValues();
         SimpleDateFormat format = new SimpleDateFormat("yyyy - MM - dd HH:mm:ss");
         Date time = new Date();
@@ -229,7 +229,7 @@ public class AirConditionerActivity extends Activity {
     }
 
     private void refreshViews(){
-        tv_switch_status.setText(data[0].equals("1")?"开启":"关闭");
+        tv_switch_status.setText(data[0].equals("1")?"On":"Off");
     }
 
 }

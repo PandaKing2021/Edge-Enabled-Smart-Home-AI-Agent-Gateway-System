@@ -1,91 +1,91 @@
-# IoT 网关系统部署指南
+# IoT Gateway System Deployment Guide
 
-本文档提供IoT网关系统的完整部署说明，包括Python网关、Android应用和设备单元的配置和部署。
+This document provides complete deployment instructions for the IoT gateway system, including configuration and deployment of the Python gateway, Android application, and device units.
 
-## 📋 目录
+## 📋 Table of Contents
 
-- [系统架构](#系统架构)
-- [环境准备](#环境准备)
-- [Python网关部署](#python网关部署)
-- [Android应用部署](#android应用部署)
-- [设备单元部署](#设备单元部署)
-- [系统测试](#系统测试)
-- [常见问题](#常见问题)
+- [System Architecture](#system-architecture)
+- [Environment Preparation](#environment-preparation)
+- [Python Gateway Deployment](#python-gateway-deployment)
+- [Android Application Deployment](#android-application-deployment)
+- [Device Unit Deployment](#device-unit-deployment)
+- [System Testing](#system-testing)
+- [Common Issues](#common-issues)
 
 ---
 
-## 系统架构
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    IoT 网关系统架构                      │
+│                 IoT Gateway System Architecture              │
 └─────────────────────────────────────────────────────────────┘
 
                     ┌──────────────┐
                     │   Android    │
                     │     App      │
-                    │  (9301端口)  │
+                    │ (Port 9301)  │
                     └──────┬───────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Python 网关服务器                            │
+│              Python Gateway Server                      │
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐      │
-│  │  • 设备通信模块 (端口9300)                     │      │
-│  │  • Android通信模块 (端口9301)                   │      │
-│  │  • 数据库服务器连接 (端口9302)                  │      │
-│  │  • 智能决策逻辑                                │      │
-│  │  • 阿里云IoT上传                                │      │
+│  │  • Device Communication Module (Port 9300)      │      │
+│  │  • Android Communication Module (Port 9301)    │      │
+│  │  • Database Server Connection (Port 9302)      │      │
+│  │  • Intelligent Decision Logic                  │      │
+│  │  • Aliyun IoT Upload                           │      │
 │  └─────────────────────────────────────────────────┘      │
 └─────────────────────────────────────────────────────────────┘
         │               │               │
         ▼               ▼               ▼
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  空调单元    │  │  窗帘单元    │  │  门禁单元    │
-│ (A1_tem_hum) │  │ (A1_curtain) │  │ (A1_security) │
+│ AC Unit     │  │ Curtain     │  │ Door Access │
+│ (A1_tem_hum)│  │ (A1_curtain)│  │ (A1_security)│
 └─────────────┘  └─────────────┘  └─────────────┘
 ```
 
 ---
 
-## 环境准备
+## Environment Preparation
 
-### 1. 硬件要求
+### 1. Hardware Requirements
 
-- **服务器**: 运行Python 3.8+的计算机或服务器
-- **网络**: 所有设备在同一局域网内
-- **设备单元**:
-  - ESP8266开发板 × 3（空调、窗帘、门禁）
-  - 传感器模块（DHT11温湿度、BH1750光照度、RFID读卡器）
-  - 执行器模块（LED灯、舵机、继电器等）
-  - OLED显示屏（可选，用于本地显示）
+- **Server**: Computer or server running Python 3.8+
+- **Network**: All devices on the same local area network
+- **Device Units**:
+  - ESP8266 development boards × 3 (air conditioner, curtain, door access)
+  - Sensor modules (DHT11 temperature/humidity, BH1750 light intensity, RFID reader)
+  - Actuator modules (LED lights, servos, relays, etc.)
+  - OLED display (optional, for local display)
 
-### 2. 软件要求
+### 2. Software Requirements
 
-- **Python网关**:
+- **Python Gateway**:
   - Python 3.8+
   - MySQL 8.0+
-  - 依赖包（见`Python/requirements.txt`）
+  - Dependencies (see `Python/requirements.txt`)
 
-- **Android应用**:
+- **Android Application**:
   - Android Studio
   - Android SDK API 21+
-  - Android设备（手机/平板）API 21+
+  - Android device (phone/tablet) API 21+
 
-- **设备单元**:
+- **Device Units**:
   - Arduino IDE 1.8+
-  - ESP8266开发板支持包
-  - 所需的Arduino库（见下文）
+  - ESP8266 board support package
+  - Required Arduino libraries (see below)
 
-### 3. Python依赖安装
+### 3. Python Dependencies Installation
 
 ```bash
 cd Python
 pip install -r requirements.txt
 ```
 
-主要依赖：
+Main dependencies:
 ```
 paho-mqtt>=1.6.0
 mysql-connector-python>=8.0.0
@@ -94,26 +94,26 @@ pyyaml>=5.4.0
 
 ---
 
-## Python网关部署
+## Python Gateway Deployment
 
-### 1. 配置网关参数
+### 1. Configure Gateway Parameters
 
-编辑 `Python/Gate/GateConfig.txt`：
+Edit `Python/Gate/GateConfig.txt`:
 
 ```
-192.168.1.107          # 网关IP（本机IP）
-192.168.1.107          # 数据库服务器IP（通常与网关同机）
-9300                   # 设备单元通信端口
-9301                   # Android应用通信端口
-9302                   # 数据库服务器通信端口
-root                   # MySQL用户名
-1234                   # MySQL密码
-gate_database          # 数据库名称
+192.168.1.107          # Gateway IP (local machine IP)
+192.168.1.107          # Database server IP (usually same as gateway)
+9300                   # Device unit communication port
+9301                   # Android application communication port
+9302                   # Database server communication port
+root                   # MySQL username
+1234                   # MySQL password
+gate_database          # Database name
 ```
 
-### 2. 配置用户信息
+### 2. Configure User Information
 
-编辑 `Python/Gate/UserConfig.txt`（首次部署可留空）：
+Edit `Python/Gate/UserConfig.txt` (can be left blank for first deployment):
 
 ```
 username
@@ -121,168 +121,168 @@ password
 device_key
 ```
 
-### 3. 初始化数据库
+### 3. Initialize Database
 
 ```bash
-# 进入数据库服务器目录
+# Enter database server directory
 cd "Database Server"
 
-# 运行数据库初始化脚本
+# Run database initialization script
 python database_process_server.py
 ```
 
-### 4. 启动网关
+### 4. Start Gateway
 
 ```bash
 cd Python/Gate
 python gate.py
 ```
 
-预期输出：
+Expected output:
 ```
-INFO - 网关配置加载成功: 网关IP=192.168.1.107, 设备端口=9300, Android端口=9301
-INFO - 与数据库服务器连接成功: 192.168.1.107:9302
-INFO - 设备节点通信端口已开启: 192.168.1.107:9300
-INFO - 移动应用通信端口已开启: 192.168.1.107:9301
-INFO - 线程 'sensor-listener' 已启动
-INFO - 线程 'android-listener' 已启动
-INFO - 线程 'aliyun-uploader' 已启动
-INFO - 网关就绪
+INFO - Gateway configuration loaded successfully: Gateway IP=192.168.1.107, Device Port=9300, Android Port=9301
+INFO - Connected to database server: 192.168.1.107:9302
+INFO - Device node communication port opened: 192.168.1.107:9300
+INFO - Mobile application communication port opened: 192.168.1.107:9301
+INFO - Thread 'sensor-listener' started
+INFO - Thread 'android-listener' started
+INFO - Thread 'aliyun-uploader' started
+INFO - Gateway ready
 ```
 
-### 5. 验证网关运行
+### 5. Verify Gateway Operation
 
 ```bash
-# 运行健康检查
+# Run health check
 cd Python/scripts
 python health_check.py
 ```
 
 ---
 
-## Android应用部署
+## Android Application Deployment
 
-### 1. 配置网关连接
+### 1. Configure Gateway Connection
 
-编辑 `Android IoT APP/app/src/main/assets/config.properties`：
+Edit `Android IoT APP/app/src/main/assets/config.properties`:
 
 ```
-ip = 192.168.1.107    # Python网关IP
-port = 9301           # Android通信端口（注意：是9301不是3001）
+ip = 192.168.1.107    # Python gateway IP
+port = 9301           # Android communication port (Note: it's 9301, not 3001)
 ```
 
-⚠️ **重要**: 确保端口为9301，与Python网关配置一致！
+⚠️ **Important**: Ensure the port is 9301, consistent with Python gateway configuration!
 
-### 2. 构建APK
+### 2. Build APK
 
-使用Android Studio：
+Using Android Studio:
 
-1. 打开项目：`Android IoT APP`
-2. 等待Gradle同步完成
+1. Open project: `Android IoT APP`
+2. Wait for Gradle sync to complete
 3. Build → Generate Signed Bundle / APK
-4. 选择APK，创建或选择签名密钥
-5. 选择release构建
+4. Select APK, create or select signing key
+5. Select release build
 
-或使用命令行：
+Or use command line:
 
 ```bash
 cd "Android IoT APP"
 ./gradlew assembleRelease
 ```
 
-APK输出位置：`app/build/outputs/apk/release/app-release.apk`
+APK output location: `app/build/outputs/apk/release/app-release.apk`
 
-### 3. 安装到设备
+### 3. Install to Device
 
 ```bash
-# 使用ADB安装
+# Install using ADB
 adb install app/build/outputs/apk/release/app-release.apk
 
-# 或直接传输APK到手机安装
+# Or transfer APK to phone and install directly
 ```
 
 ---
 
-## 设备单元部署
+## Device Unit Deployment
 
-### 1. 配置生成
+### 1. Configuration Generation
 
-**方式1：使用配置生成器（推荐）**
+**Method 1: Using Configuration Generator (Recommended)**
 
 ```bash
 cd Python/scripts
 python generate_device_config.py
 ```
 
-这将自动生成各设备的配置文件。
+This will automatically generate configuration files for each device.
 
-**方式2：手动配置**
+**Method 2: Manual Configuration**
 
-编辑 `Device Unit code/config_template.h`，然后重命名为 `config.h`：
+Edit `Device Unit code/config_template.h`, then rename to `config.h`:
 
 ```c
-#define WIFI_SSID           "你的WiFi名称"
-#define WIFI_PASSWORD       "你的WiFi密码"
+#define WIFI_SSID           "Your WiFi Name"
+#define WIFI_PASSWORD       "Your WiFi Password"
 #define GATEWAY_IP          "192.168.1.107"
 #define GATEWAY_PORT        9300
-#define DEVICE_ID           "A1_tem_hum"  // 根据设备类型修改
+#define DEVICE_ID           "A1_tem_hum"  // Modify based on device type
 ```
 
-### 2. Arduino IDE配置
+### 2. Arduino IDE Configuration
 
-1. 安装ESP8266开发板支持：
+1. Install ESP8266 board support:
    - File → Preferences → Additional Boards Manager URLs
-   - 添加：`http://arduino.esp8266.com/stable/package_esp8266com_index.json`
-   - Tools → Board → Boards Manager → 搜索"ESP8266" → 安装
+   - Add: `http://arduino.esp8266.com/stable/package_esp8266com_index.json`
+   - Tools → Board → Boards Manager → Search "ESP8266" → Install
 
-2. 安装所需库：
-   - `Adafruit_SSD1306`（OLED显示）
-   - `Adafruit_GFX`（图形库）
-   - `DHT_sensor_library`（温湿度传感器）
-   - `BH1750`（光照度传感器）
-   - `MFRC522`（RFID读卡器）
-   - `ArduinoJson`（JSON处理）
-   - `PubSubClient`（MQTT，阿里云使用）
+2. Install required libraries:
+   - `Adafruit_SSD1306` (OLED display)
+   - `Adafruit_GFX` (Graphics library)
+   - `DHT_sensor_library` (Temperature/humidity sensor)
+   - `BH1750` (Light intensity sensor)
+   - `MFRC522` (RFID reader)
+   - `ArduinoJson` (JSON processing)
+   - `PubSubClient` (MQTT, for Aliyun use)
 
-3. 选择开发板：
+3. Select board:
    - Tools → Board → ESP8266 Boards → Generic ESP8266 Module
 
-4. 配置上传参数：
+4. Configure upload parameters:
    - Flash Size: 4MB (FS:2MB OTA:~1019KB)
    - CPU Frequency: 80 MHz
    - Upload Speed: 115200
 
-### 3. 上传固件
+### 3. Upload Firmware
 
-**空调单元**：
+**Air Conditioner Unit**:
 ```bash
-# 打开 Arduino IDE
+# Open Arduino IDE
 # File → Open → Device Unit code/esp8266_airconditioner_unit/esp8266_airconditioner_unit.ino
-# 点击 Upload 按钮或按 Ctrl+U
+# Click Upload button or press Ctrl+U
 ```
 
-**窗帘单元**：
+**Curtain Unit**:
 ```bash
 # File → Open → Device Unit code/esp8266_curtain_unit/esp8266_curtain_unit.ino
 # Upload
 ```
 
-**门禁单元**：
+**Door Access Unit**:
 ```bash
 # File → Open → Device Unit code/esp8266_doorsecurity_unit/esp8266_doorsecurity_unit.ino
 # Upload
 ```
 
-### 4. 验证设备连接
+### 4. Verify Device Connection
 
-设备上传成功后，在Python网关控制台查看连接日志：
+After device upload successfully, check connection logs in Python gateway console:
 
 ```
-INFO - 设备节点连接: ('192.168.1.xxx', xxxxx)
-INFO - 设备节点 'A1_tem_hum' 已连入网关
+INFO - Device node connection: ('192.168.1.xxx', xxxxx)
+INFO - Device node 'A1_tem_hum' connected to gateway
 ```
 
-设备OLED应显示：
+Device OLED should display:
 ```
 T: 25.0
 H: 60.0
@@ -291,204 +291,204 @@ S: 10
 
 ---
 
-## 系统测试
+## System Testing
 
-### 1. 单元测试
+### 1. Unit Testing
 
-**Python网关测试**：
+**Python Gateway Testing**:
 ```bash
-# 测试数据库连接
+# Test database connection
 cd Python/Database Server
 python -c "import database_process_server; print('OK')"
 
-# 测试网关启动
+# Test gateway startup
 cd Gate
 python gate.py
 ```
 
-**Android应用测试**：
-1. 启动应用
-2. 测试登录功能
-3. 测试注册功能
-4. 查看传感器数据展示
+**Android Application Testing**:
+1. Launch application
+2. Test login functionality
+3. Test registration functionality
+4. View sensor data display
 
-**设备单元测试**：
-1. 观察OLED显示
-2. 检查串口监视器（Tools → Serial Monitor，波特率115200）
-3. 验证传感器数据上传
+**Device Unit Testing**:
+1. Observe OLED display
+2. Check serial monitor (Tools → Serial Monitor, baud rate 115200)
+3. Verify sensor data upload
 
-### 2. 集成测试
+### 2. Integration Testing
 
-**测试数据流**：
+**Test Data Flow**:
 
-1. **设备 → 网关 → Android**：
-   - 在设备旁改变环境（温度、光照）
-   - 观察Android应用数据更新
+1. **Device → Gateway → Android**:
+   - Change environment near device (temperature, light)
+   - Observe Android application data update
 
-2. **Android → 网关 → 设备**：
-   - 在Android应用调整阈值
-   - 观察设备执行控制动作（LED、窗帘）
+2. **Android → Gateway → Device**:
+   - Adjust thresholds in Android application
+   - Observe device executing control actions (LED, curtain)
 
-3. **数据库同步**：
-   - 在MySQL中查询历史数据
+3. **Database Synchronization**:
+   - Query historical data in MySQL
    ```sql
    USE gate_database;
    SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT 10;
    ```
 
-### 3. 压力测试
+### 3. Stress Testing
 
 ```bash
-# 持续运行测试脚本
-python scripts/stress_test.py  # 如果有此脚本
+# Run test script continuously
+python scripts/stress_test.py  # If this script exists
 
-# 监控网关资源
+# Monitor gateway resources
 top  # Linux/Mac
 taskmgr  # Windows
 ```
 
 ---
 
-## 常见问题
+## Common Issues
 
-### Q1: 设备单元无法连接网关
+### Q1: Device Units Cannot Connect to Gateway
 
-**症状**: ESP8266串口显示 "Connection failed"
+**Symptoms**: ESP8266 serial displays "Connection failed"
 
-**原因与解决**:
-- WiFi密码错误 → 检查 `config.h`
-- 网关IP错误 → 确认 `GATEWAY_IP`
-- 端口错误 → 确认 `GATEWAY_PORT = 9300`
-- 防火墙阻止 → 检查9300端口是否开放
-- 网关未启动 → 检查 `gate.py` 是否运行
+**Causes and Solutions**:
+- WiFi password error → Check `config.h`
+- Gateway IP error → Confirm `GATEWAY_IP`
+- Port error → Confirm `GATEWAY_PORT = 9300`
+- Firewall blocking → Check if port 9300 is open
+- Gateway not started → Check if `gate.py` is running
 
-### Q2: Android应用无法连接网关
+### Q2: Android Application Cannot Connect to Gateway
 
-**症状**: 登录时提示 "连接失败"
+**Symptoms**: "Connection failed" prompt during login
 
-**原因与解决**:
-- 端口配置错误 → 确认 `config.properties` 中 `port = 9301`
-- 网关IP错误 → 确认IP地址正确
-- 网络不通 → 检查手机与网关在同一网络
-- 网关未启动 → 检查网关日志
+**Causes and Solutions**:
+- Port configuration error → Confirm `port = 9301` in `config.properties`
+- Gateway IP error → Confirm IP address is correct
+- Network not reachable → Check phone and gateway on same network
+- Gateway not started → Check gateway logs
 
-### Q3: 传感器数据不准确
+### Q3: Inaccurate Sensor Data
 
-**症状**: 温湿度/光照度数值异常
+**Symptoms**: Abnormal temperature/humidity/light intensity values
 
-**原因与解决**:
-- 传感器未校准 → 参考传感器文档校准
-- 接线错误 → 检查I2C/Wire接线
-- 电源不稳定 → 检查3.3V/5V电源
+**Causes and Solutions**:
+- Sensor not calibrated → Refer to sensor documentation for calibration
+- Wiring error → Check I2C/Wire connections
+- Unstable power supply → Check 3.3V/5V power supply
 
-### Q4: 设备控制无响应
+### Q4: Device Control No Response
 
-**症状**: Android发送指令后设备无动作
+**Symptoms**: Device no action after Android sends command
 
-**原因与解决**:
-- 阈值未触发 → 检查智能决策逻辑
-- 设备ID错误 → 确认 `DEVICE_ID` 正确
-- JSON格式错误 → 检查串口监视器输出
+**Causes and Solutions**:
+- Threshold not triggered → Check intelligent decision logic
+- Device ID error → Confirm `DEVICE_ID` is correct
+- JSON format error → Check serial monitor output
 
-### Q5: 数据库连接失败
+### Q5: Database Connection Failed
 
-**症状**: 网关启动时 "与数据库服务器连接失败"
+**Symptoms**: "Connection to database server failed" when gateway starts
 
-**原因与解决**:
-- MySQL未启动 → 启动MySQL服务
-- 密码错误 → 检查 `GateConfig.txt`
-- 端口错误 → 确认MySQL端口为3306
-- 防火墙阻止 → 开放9302端口
+**Causes and Solutions**:
+- MySQL not started → Start MySQL service
+- Password error → Check `GateConfig.txt`
+- Port error → Confirm MySQL port is 3306
+- Firewall blocking → Open port 9302
 
 ---
 
-## 维护与监控
+## Maintenance and Monitoring
 
-### 日志查看
+### Log Viewing
 
-**网关日志**：
+**Gateway Logs**:
 ```bash
-# 实时查看
+# View in real-time
 tail -f Python/Gate/gateway.log
 
-# 查看错误
+# View errors
 grep ERROR Python/Gate/gateway.log
 ```
 
-**数据库日志**：
+**Database Logs**:
 ```bash
 tail -f Python/Database Server/database.log
 ```
 
-### 备份
+### Backup
 
-**数据库备份**：
+**Database Backup**:
 ```bash
 mysqldump -u root -p gate_database > backup_$(date +%Y%m%d).sql
 ```
 
-**配置备份**：
+**Configuration Backup**:
 ```bash
 tar -czf config_backup_$(date +%Y%m%d).tar.gz Python/Gate/*.txt
 ```
 
-### 性能监控
+### Performance Monitoring
 
 ```bash
-# 查看网络连接
+# View network connections
 netstat -an | grep -E '9300|9301|9302'
 
-# 查看进程资源
+# View process resources
 ps aux | grep python
 ```
 
 ---
 
-## 附录
+## Appendix
 
-### A. 端口分配
+### A. Port Allocation
 
-| 服务 | 端口 | 用途 |
-|------|------|------|
-| 设备单元通信 | 9300 | ESP8266设备连接 |
-| Android应用 | 9301 | 移动应用连接 |
-| 数据库服务器 | 9302 | 数据库进程通信 |
-| MySQL | 3306 | 数据库连接 |
-| 阿里云MQTT | 1883 | 物联网云平台 |
+| Service | Port | Purpose |
+|---------|------|---------|
+| Device Unit Communication | 9300 | ESP8266 device connection |
+| Android Application | 9301 | Mobile application connection |
+| Database Server | 9302 | Database process communication |
+| MySQL | 3306 | Database connection |
+| Aliyun MQTT | 1883 | IoT cloud platform |
 
-### B. 设备ID映射
+### B. Device ID Mapping
 
-| 设备 | 设备ID | 功能 |
-|------|--------|------|
-| 智能空调 | A1_tem_hum | 温湿度监控 |
-| 智能窗帘 | A1_curtain | 光照度监控、窗帘控制 |
-| 智能门禁 | A1_security | 门禁控制 |
+| Device | Device ID | Function |
+|--------|-----------|----------|
+| Smart Air Conditioner | A1_tem_hum | Temperature/humidity monitoring |
+| Smart Curtain | A1_curtain | Light intensity monitoring, curtain control |
+| Smart Door Access | A1_security | Door access control |
 
-### C. 数据字段说明
+### C. Data Field Description
 
-| 字段名 | 说明 | 单位 |
-|--------|------|------|
-| Light_TH | 空调灯状态 | 0/1 |
-| Temperature | 温度 | °C |
-| Humidity | 湿度 | % |
-| Light_CU | 室内灯状态 | 0/1 |
-| Brightness | 光照度 | Lux |
-| Curtain_status | 窗帘状态 | 0/1 |
-| Door_Security_Status | 门禁状态 | 0/1 |
-
----
-
-## 技术支持
-
-遇到问题？
-
-1. 运行健康检查：`python scripts/health_check.py`
-2. 查看日志文件
-3. 检查常见问题章节
-4. 联系技术支持
+| Field Name | Description | Unit |
+|------------|-------------|------|
+| Light_TH | AC light status | 0/1 |
+| Temperature | Temperature | °C |
+| Humidity | Humidity | % |
+| Light_CU | Indoor light status | 0/1 |
+| Brightness | Light intensity | Lux |
+| Curtain_status | Curtain status | 0/1 |
+| Door_Security_Status | Door access status | 0/1 |
 
 ---
 
-**文档版本**: 1.0
-**最后更新**: 2024年
-**维护者**: IoT开发团队
+## Technical Support
+
+Having trouble?
+
+1. Run health check: `python scripts/health_check.py`
+2. Check log files
+3. Review Common Issues section
+4. Contact technical support
+
+---
+
+**Document Version**: 1.0
+**Last Updated**: 2024
+**Maintainer**: IoT Development Team

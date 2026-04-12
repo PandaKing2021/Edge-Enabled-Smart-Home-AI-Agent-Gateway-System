@@ -26,7 +26,7 @@ public class RegisterActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        setTitle("注册");
+        setTitle("Register");
 
         et_Reg_account = (EditText) findViewById(R.id.reg_account);
         et_Reg_password = (EditText) findViewById(R.id.reg_password);
@@ -37,7 +37,7 @@ public class RegisterActivity extends Activity {
         b_Back_to_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(RegisterActivity.this,"已离开注册页面",Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this,"Left Registration Page",Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(RegisterActivity.this,LoginActivity.class));
                 finish();
             }
@@ -67,9 +67,9 @@ public class RegisterActivity extends Activity {
             super.handleMessage(message);
             int state = message.getData().getInt("state");
             if (state == 1) {
-                Toast.makeText(RegisterActivity.this, "注册成功！", Toast.LENGTH_LONG).show();
+                Toast.makeText(RegisterActivity.this, "Registration Successful!", Toast.LENGTH_LONG).show();
             } else if (state == 0) {
-                Toast.makeText(RegisterActivity.this, "注册失败！", Toast.LENGTH_LONG).show();
+                Toast.makeText(RegisterActivity.this, "Registration Failed!", Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -77,7 +77,7 @@ public class RegisterActivity extends Activity {
     protected int register() {
         int state = 0;
         try {
-            // 读取assets文件夹下的用户配置文件键值对
+            //Read user config file key-value pairs in assets folder
             Properties properties = new Properties();
             properties.load(getAssets().open("config.properties"));
             String ip = properties.getProperty("ip");
@@ -88,7 +88,7 @@ public class RegisterActivity extends Activity {
 
             String device_key = et_Reg_device_key.getText().toString();
             if (device_key.equals(""))
-                device_key = "NULL";  // 强行填入字段
+                device_key = "NULL";  //Force fill field
 
             MyComm myComm = new MyComm();
             String reg_data = myComm.format_comm_data("register", JSON.toJSONString(new UserBean(reg_account, reg_password, device_key)), "1");

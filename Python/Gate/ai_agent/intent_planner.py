@@ -1,6 +1,6 @@
-"""意图解析与任务规划器模块。
+"""Intent parsing and task planner module.
 
-集成智谱AI GLM-4.7-Flash,实现意图理解与任务规划。
+Integrates Zhipu AI GLM-4.7-Flash, implements intent understanding and task planning.
 """
 
 import json
@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 class IntentPlanner:
-    """意图解析与任务规划器。
+    """Intent parsing and task planner.
 
-    使用GLM-4.7-Flash模型解析用户意图并生成任务计划。
+    Uses GLM-4.7-Flash model to parse user intent and generate task plan.
 
     Attributes:
-        api_key: 智谱AI API密钥
-        base_url: API基础URL
-        model_name: 模型名称
-        temperature: 生成温度
-        client: ZhipuAI客户端
-        capability_retriever: 设备能力检索器
-        preference_manager: 偏好管理器
+        api_key: Zhipu AI API key
+        base_url: API base URL
+        model_name: Model name
+        temperature: Generation temperature
+        client: ZhipuAI client
+        capability_retriever: Device capability retriever
+        preference_manager: Preference manager
     """
 
     def __init__(
@@ -40,15 +40,15 @@ class IntentPlanner:
         capability_retriever: Optional["CapabilityRetriever"] = None,
         preference_manager: Optional["PreferenceManager"] = None,
     ) -> None:
-        """初始化意图解析器。
+        """Initialize intent parser.
 
         Args:
-            api_key: 智谱AI API密钥
-            base_url: API基础URL
-            model_name: 模型名称
-            temperature: 生成温度(0-1)
-            capability_retriever: 设备能力检索器实例
-            preference_manager: 偏好管理器实例
+            api_key: Zhipu AI API key
+            base_url: API base URL
+            model_name: Model name
+            temperature: Generation temperature (0-1)
+            capability_retriever: Device capability retriever instance
+            preference_manager: Preference manager instance
         """
         self.api_key = api_key
         self.base_url = base_url
@@ -57,51 +57,51 @@ class IntentPlanner:
         self.capability_retriever = capability_retriever
         self.preference_manager = preference_manager
 
-        # 初始化ZhipuAI客户端
+        # Initialize ZhipuAI client
         try:
             self.client = ZhipuAI(api_key=api_key, base_url=base_url)
-            logger.info("ZhipuAI客户端初始化成功: %s", model_name)
+            logger.info("ZhipuAI client initialized successfully: %s", model_name)
         except Exception as error:
-            logger.error("ZhipuAI客户端初始化失败: %s", error)
+            logger.error("ZhipuAI client initialization failed: %s", error)
             raise
 
     def plan_tasks(
         self,
         user_input: str,
         device_state: Dict,
-        context_history: str = "无历史对话",
+        context_history: str = "No dialogue history",
         user_id: Optional[str] = None,
     ) -> Dict:
-        """解析用户意图并生成任务计划。
+        """Parse user intent and generate task plan.
 
         Args:
-            user_input: 用户输入的自然语言指令
-            device_state: 当前设备状态字典
-            context_history: 对话上下文历史
-            user_id: 用户ID,用于查询偏好
+            user_input: User input natural language command
+            device_state: Current device status dictionary
+            context_history: Dialogue context history
+            user_id: User ID, used to query preferences
 
         Returns:
-            Dict: 任务计划,包含reasoning和tasks字段
+            Dict: Task plan, containing reasoning and tasks fields
         """
         try:
-            # 1. 检索相关设备
+            # 1. Retrieve relevant devices
             relevant_devices = []
             if self.capability_retriever:
                 relevant_devices = self.capability_retriever.retrieve_relevant_devices(
                     user_input, top_k=3
                 )
 
-            # 2. 检索匹配场景
+            # 2. Retrieve matching scenario
             matched_scenario = None
             if self.capability_retriever:
                 matched_scenario = self.capability_retriever.retrieve_scenario(user_input)
 
-            # 3. 检索用户偏好
+            # 3. Retrieve user preferences
             user_preferences = {}
             if self.preference_manager and user_id:
                 user_preferences = self.preference_manager.get_user_preferences(user_id)
 
-            # 4. 构建提示词
+            # 4. Build prompt
             prompt = self._build_planning_prompt(
                 user_input=user_input,
                 device_state=device_state,
@@ -111,27 +111,27 @@ class IntentPlanner:
                 context_history=context_history,
             )
 
-            # 5. 调用GLM-4.7-Flash
-            logger.info("调用GLM-4.7-Flash进行意图解析: %s", user_input)
+            # 5. Call GLM-4.7-Flash
+            logger.info("Calling GLM-4.7-Flash for intent parsing: %s", user_input)
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,
             )
 
-            # 6. 解析响应
+            # 6. Parse response
             content = response.choices[0].message.content
-            logger.debug("GLM响应: %s", content)
+            logger.debug("GLM response: %s", content)
 
             task_plan = self._parse_task_plan(content)
 
-            logger.info("任务规划完成: %d个任务", len(task_plan.get("tasks", [])))
+            logger.info("Task planning completed: %d tasks", len(task_plan.get("tasks", [])))
             return task_plan
 
         except Exception as error:
-            logger.error("意图解析失败: %s", error, exc_info=True)
+            logger.error("Intent parsing failed: %s", error, exc_info=True)
             return {
-                "reasoning": f"解析失败: {str(error)}",
+                "reasoning": f"Parse failed: {str(error)}",
                 "tasks": [],
                 "error": str(error),
             }
@@ -145,103 +145,103 @@ class IntentPlanner:
         user_preferences: Dict,
         context_history: str,
     ) -> str:
-        """构建任务规划提示词。
+        """Build task planning prompt.
 
         Args:
-            user_input: 用户输入
-            device_state: 设备状态
-            relevant_devices: 相关设备列表
-            matched_scenario: 匹配的场景
-            user_preferences: 用户偏好
-            context_history: 对话上下文
+            user_input: User input
+            device_state: Device status
+            relevant_devices: Relevant device list
+            matched_scenario: Matched scenario
+            user_preferences: User preferences
+            context_history: Dialogue context
 
         Returns:
-            str: 格式化的提示词
+            str: Formatted prompt
         """
-        # 格式化设备状态
+        # Format device state
         device_state_str = json.dumps(device_state, ensure_ascii=False, indent=2)
 
-        # 格式化相关设备能力
+        # Format relevant device capabilities
         if self.capability_retriever:
             capabilities_str = self.capability_retriever.format_capabilities_for_prompt(
                 relevant_devices
             )
         else:
-            capabilities_str = "无设备能力信息"
+            capabilities_str = "No device capability information"
 
-        # 格式化场景建议
+        # Format scenario suggestion
         scenario_str = ""
         if matched_scenario:
             scenario_info = matched_scenario["scenario_info"]
             scenario_str = f"""
-检测到场景: {scenario_info['name']}
-场景描述: {scenario_info['description']}
-建议操作: {json.dumps(scenario_info['suggested_actions'], ensure_ascii=False, indent=2)}
+Detected scenario: {scenario_info['name']}
+Scenario description: {scenario_info['description']}
+Suggested operations: {json.dumps(scenario_info['suggested_actions'], ensure_ascii=False, indent=2)}
 """
 
-        # 格式化用户偏好
-        preferences_str = "无偏好记录"
+        # Format user preferences
+        preferences_str = "No preference records"
         if user_preferences:
             preferences_str = json.dumps(user_preferences, ensure_ascii=False, indent=2)
 
-        # 构建完整提示词
-        prompt = f"""你是一个智能家居任务编排助手。用户指令："{user_input}"
+        # Build complete prompt
+        prompt = f"""You are a smart home task orchestration assistant. User instruction: "{user_input}"
 
-对话上下文：
+Dialogue context:
 {context_history}
 
-当前设备状态：
+Current device status:
 {device_state_str}
 
-相关设备能力：
+Relevant device capabilities:
 {capabilities_str}
 {scenario_str}
-用户偏好：
+User preferences:
 {preferences_str}
 
-请逐步思考并生成任务执行计划：
-1. 分析用户意图和需求
-2. 识别需要的设备和操作
-3. 考虑用户偏好调整参数
-4. 按顺序列出执行步骤
+Please think step by step and generate task execution plan:
+1. Analyze user intent and requirements
+2. Identify required devices and operations
+3. Adjust parameters considering user preferences
+4. List execution steps in order
 
-输出格式为JSON，严格按照以下格式：
+Output format must be JSON, strictly following this format:
 {{
-  "reasoning": "你的思考过程",
+  "reasoning": "Your thought process",
   "tasks": [
-    {{"device": "设备ID", "action": "动作名称", "value": 参数值}},
-    {{"device": "设备ID", "action": "动作名称", "value": 参数值}}
+    {{"device": "Device ID", "action": "Action name", "value": parameter value}},
+    {{"device": "Device ID", "action": "Action name", "value": parameter value}}
   ]
 }}
 
-注意：
-- device字段必须是设备ID(如"Light_TH", "Curtain_status")
-- action字段必须是设备支持的action名称(如"set_temperature", "open", "close")
-- value字段为参数值,如果没有参数则设为null
-- 如果无法理解用户意图或没有相关设备,返回空tasks列表
+Notes:
+- device field must be device ID (e.g., "Light_TH", "Curtain_status")
+- action field must be action name supported by device (e.g., "set_temperature", "open", "close")
+- value field is parameter value, set to null if no parameter
+- If unable to understand user intent or no relevant devices, return empty tasks list
 
-请直接输出JSON,不要包含其他文字。"""
+Please output JSON directly without any other text."""
 
         return prompt
 
     def _parse_task_plan(self, content: str) -> Dict:
-        """解析LLM返回的任务计划。
+        """Parse task plan returned by LLM.
 
         Args:
-            content: LLM返回的内容
+            content: Content returned by LLM
 
         Returns:
-            Dict: 解析后的任务计划
+            Dict: Parsed task plan
         """
         try:
-            # 尝试直接解析JSON
+            # Try to parse JSON directly
             task_plan = json.loads(content)
             return task_plan
 
         except json.JSONDecodeError:
-            # 尝试提取JSON部分
+            # Try to extract JSON part
             try:
-                # 查找第一个 { 和最后一个 }
+                # Find first { and last }
                 start = content.find("{")
                 end = content.rfind("}") + 1
                 if start != -1 and end > start:
@@ -249,33 +249,33 @@ class IntentPlanner:
                     task_plan = json.loads(json_str)
                     return task_plan
                 else:
-                    logger.warning("无法从响应中提取JSON: %s", content)
+                    logger.warning("Unable to extract JSON from response: %s", content)
                     return {
-                        "reasoning": "响应格式错误",
+                        "reasoning": "Response format error",
                         "tasks": [],
                         "error": "Invalid JSON format",
                     }
             except Exception as error:
-                logger.error("解析任务计划失败: %s", error)
+                logger.error("Failed to parse task plan: %s", error)
                 return {
-                    "reasoning": f"解析失败: {str(error)}",
+                    "reasoning": f"Parsing failed: {str(error)}",
                     "tasks": [],
                     "error": str(error),
                 }
 
     def quick_plan(self, user_input: str, device_state: Dict) -> Dict:
-        """快速规划(简化版,不包含偏好和上下文)。
+        """Quick planning (simplified version, without preferences and context).
 
         Args:
-            user_input: 用户输入
-            device_state: 设备状态
+            user_input: User input
+            device_state: Device status
 
         Returns:
-            Dict: 任务计划
+            Dict: Task plan
         """
         return self.plan_tasks(
             user_input=user_input,
             device_state=device_state,
-            context_history="无历史对话",
+            context_history="No dialogue history",
             user_id=None,
         )

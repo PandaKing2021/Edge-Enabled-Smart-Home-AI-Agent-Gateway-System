@@ -19,7 +19,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setTitle("主页面");
+        setTitle("Main Page");
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this,"iot_db",null,1);
         db = databaseHelper.getWritableDatabase();
@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
         b_AirConditioner_detail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"跳转至智能空调详情页",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,"Navigate to Smart Air Conditioner Details",Toast.LENGTH_LONG).show();
                 startActivity(new Intent(MainActivity.this, AirConditionerActivity.class));
             }
         });
@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
         b_Curtain_detail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"跳转至智能窗帘详情页",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,"Navigate to Smart Curtain Details",Toast.LENGTH_LONG).show();
                 startActivity(new Intent(MainActivity.this, CurtainActivity.class));
             }
         });
@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
         b_Door_security_detail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"跳转至智能门禁详情页",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,"Navigate to Smart Door Lock Details",Toast.LENGTH_LONG).show();
                 startActivity(new Intent(MainActivity.this, DoorSecurityActivity.class));
             }
         });
@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
         b_history.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"跳转至历史记录详情页",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,"Navigate to History Details",Toast.LENGTH_LONG).show();
                 startActivity(new Intent(MainActivity.this, HistoryActivity.class));
             }
         });

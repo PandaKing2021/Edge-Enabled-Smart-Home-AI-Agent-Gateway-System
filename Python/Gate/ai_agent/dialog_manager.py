@@ -1,6 +1,6 @@
-"""对话管理器模块。
+"""Dialog manager module.
 
-负责管理多轮对话上下文,维护会话历史。
+Responsible for managing multi-turn dialogue context and maintaining session history.
 """
 
 import json
@@ -15,20 +15,20 @@ logger = logging.getLogger(__name__)
 
 
 class DialogManager:
-    """对话管理器,维护多轮对话上下文和历史记录。
+    """Dialog manager, maintains multi-turn dialogue context and history.
 
     Attributes:
-        max_context_turns: 最大保留对话轮数
-        session_timeout: 会话超时时间(秒)
-        sessions: 会话字典 {session_id: {"history": deque, "last_active": timestamp}}
+        max_context_turns: Maximum number of dialogue turns to keep
+        session_timeout: Session timeout (seconds)
+        sessions: Session dictionary {session_id: {"history": deque, "last_active": timestamp}}
     """
 
     def __init__(self, max_context_turns: int = 5, session_timeout: int = 3600) -> None:
-        """初始化对话管理器。
+        """Initialize dialog manager.
 
         Args:
-            max_context_turns: 最大保留对话轮数,默认5轮
-            session_timeout: 会话超时时间(秒),默认1小时
+            max_context_turns: Maximum number of dialogue turns to keep, default 5
+            session_timeout: Session timeout (seconds), default 1 hour
         """
         self.max_context_turns = max_context_turns
         self.session_timeout = session_timeout
@@ -36,13 +36,13 @@ class DialogManager:
         self.sessions: Dict[str, Dict] = {}
 
     def create_session(self, user_id: Optional[str] = None) -> str:
-        """创建新会话。
+        """Create new session.
 
         Args:
-            user_id: 用户标识,可选
+            user_id: User identifier, optional
 
         Returns:
-            session_id: 新会话ID
+            session_id: New session ID
         """
         session_id = str(uuid.uuid4())
         with self._lock:
@@ -51,7 +51,7 @@ class DialogManager:
                 "history": deque(maxlen=self.max_context_turns),
                 "last_active": time.time(),
             }
-        logger.info("创建新会话: %s (用户: %s)", session_id, user_id)
+        logger.info("Created new session: %s (user: %s)", session_id, user_id)
         return session_id
 
     def add_message(
@@ -62,21 +62,21 @@ class DialogManager:
         context_before: Optional[Dict] = None,
         context_after: Optional[Dict] = None,
     ) -> bool:
-        """添加一轮对话到会话历史。
+        """Add a dialogue turn to session history.
 
         Args:
-            session_id: 会话ID
-            user_input: 用户输入
-            agent_response: Agent响应
-            context_before: 执行前上下文,可选
-            context_after: 执行后上下文,可选
+            session_id: Session ID
+            user_input: User input
+            agent_response: Agent response
+            context_before: Context before execution, optional
+            context_after: Context after execution, optional
 
         Returns:
-            bool: 是否添加成功
+            bool: Whether addition was successful
         """
         with self._lock:
             if session_id not in self.sessions:
-                logger.warning("会话不存在: %s", session_id)
+                logger.warning("Session does not exist: %s", session_id)
                 return False
 
             session = self.sessions[session_id]
@@ -90,56 +90,56 @@ class DialogManager:
                 }
             )
             session["last_active"] = time.time()
-            logger.debug("会话 %s 添加对话轮次: %s", session_id, user_input[:50])
+            logger.debug("Session %s added dialogue turn: %s", session_id, user_input[:50])
             return True
 
     def get_context(self, session_id: str) -> List[Dict]:
-        """获取会话上下文历史。
+        """Get session context history.
 
         Args:
-            session_id: 会话ID
+            session_id: Session ID
 
         Returns:
-            List[Dict]: 对话历史列表
+            List[Dict]: Dialogue history list
         """
         with self._lock:
             if session_id not in self.sessions:
-                logger.warning("会话不存在: %s", session_id)
+                logger.warning("Session does not exist: %s", session_id)
                 return []
 
             session = self.sessions[session_id]
             return list(session["history"])
 
     def get_context_string(self, session_id: str) -> str:
-        """获取会话上下文的字符串表示,用于LLM提示。
+        """Get string representation of session context for LLM prompts.
 
         Args:
-            session_id: 会话ID
+            session_id: Session ID
 
         Returns:
-            str: 格式化的对话历史字符串
+            str: Formatted dialogue history string
         """
         history = self.get_context(session_id)
         if not history:
-            return "无历史对话"
+            return "No dialogue history"
 
         context_parts = []
         for i, turn in enumerate(history, 1):
-            context_parts.append(f"第{i}轮:")
-            context_parts.append(f"用户: {turn['user_input']}")
-            context_parts.append(f"助手: {turn['agent_response']}")
+            context_parts.append(f"Round {i}:")
+            context_parts.append(f"User: {turn['user_input']}")
+            context_parts.append(f"Assistant: {turn['agent_response']}")
             context_parts.append("")
 
         return "\n".join(context_parts)
 
     def clear_session(self, session_id: str) -> bool:
-        """清空指定会话历史。
+        """Clear specified session history.
 
         Args:
-            session_id: 会话ID
+            session_id: Session ID
 
         Returns:
-            bool: 是否清空成功
+            bool: Whether clear was successful
         """
         with self._lock:
             if session_id not in self.sessions:
@@ -147,14 +147,14 @@ class DialogManager:
 
             self.sessions[session_id]["history"].clear()
             self.sessions[session_id]["last_active"] = time.time()
-            logger.info("清空会话历史: %s", session_id)
+            logger.info("Cleared session history: %s", session_id)
             return True
 
     def cleanup_expired_sessions(self) -> int:
-        """清理过期会话。
+        """Clean up expired sessions.
 
         Returns:
-            int: 清理的会话数量
+            int: Number of cleaned up sessions
         """
         current_time = time.time()
         expired_sessions = []
@@ -168,18 +168,18 @@ class DialogManager:
                 del self.sessions[session_id]
 
         if expired_sessions:
-            logger.info("清理过期会话: %d个", len(expired_sessions))
+            logger.info("Cleaned expired sessions: %d", len(expired_sessions))
 
         return len(expired_sessions)
 
     def get_session_info(self, session_id: str) -> Optional[Dict]:
-        """获取会话信息。
+        """Get session information.
 
         Args:
-            session_id: 会话ID
+            session_id: Session ID
 
         Returns:
-            Optional[Dict]: 会话信息字典,不存在返回None
+            Optional[Dict]: Session information dictionary, returns None if not exists
         """
         with self._lock:
             session = self.sessions.get(session_id)

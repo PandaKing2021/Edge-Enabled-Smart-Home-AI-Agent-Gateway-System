@@ -1,6 +1,6 @@
-"""偏好记忆管理器模块。
+"""Preference memory manager module.
 
-存储和管理用户对自动生成任务的修正偏好。
+Stores and manages user correction preferences for auto-generated tasks.
 """
 
 import json
@@ -13,27 +13,27 @@ logger = logging.getLogger(__name__)
 
 
 class PreferenceManager:
-    """偏好记忆管理器。
+    """Preference Memory Manager.
 
-    记录用户对任务执行结果的修正,实现个性化优化。
+    Records user corrections to task execution results, enabling personalized optimization.
 
     Attributes:
-        db_connection: 数据库连接对象
-        table_name: 偏好表名称
+        db_connection: Database connection object
+        table_name: Preference table name
     """
 
     def __init__(self, db_connection=None, table_name: str = "user_preferences") -> None:
-        """初始化偏好管理器。
+        """Initialize preference manager.
 
         Args:
-            db_connection: 数据库连接对象(MySQL connector)
-            table_name: 偏好表名称
+            db_connection: Database connection object (MySQL connector)
+            table_name: Preference table name
         """
         self.db_connection = db_connection
         self.table_name = table_name
         self._lock = threading.Lock()
 
-        # 内存缓存
+        # In-memory cache
         self._cache: Dict[str, List[Dict]] = {}
 
     def record_preference(
@@ -45,23 +45,23 @@ class PreferenceManager:
         parameter: str,
         preferred_value: str,
     ) -> bool:
-        """记录用户偏好修正。
+        """Record user preference correction.
 
         Args:
-            user_id: 用户ID
-            scenario: 场景标识(如"sleep", "movie")
-            device: 设备ID
-            action: 动作名称
-            parameter: 参数名称
-            preferred_value: 用户偏好的值
+            user_id: User ID
+            scenario: Scenario identifier (e.g., "sleep", "movie")
+            device: Device ID
+            action: Action name
+            parameter: Parameter name
+            preferred_value: User's preferred value
 
         Returns:
-            bool: 是否记录成功
+            bool: Whether recording was successful
         """
         try:
             timestamp = datetime.now()
 
-            # 存储到内存缓存
+            # Store to in-memory cache
             with self._lock:
                 if user_id not in self._cache:
                     self._cache[user_id] = []
@@ -76,7 +76,7 @@ class PreferenceManager:
                     "updated_at": timestamp,
                 }
 
-                # 检查是否已存在相同偏好
+                # Check if same preference already exists
                 existing_idx = None
                 for i, p in enumerate(self._cache[user_id]):
                     if (
@@ -89,13 +89,13 @@ class PreferenceManager:
                         break
 
                 if existing_idx is not None:
-                    # 更新已有偏好
+                    # Update existing preference
                     self._cache[user_id][existing_idx].update(preference)
                 else:
-                    # 添加新偏好
+                    # Add new preference
                     self._cache[user_id].append(preference)
 
-            # 存储到数据库
+            # Store to database
             if self.db_connection:
                 self._save_to_db(
                     user_id=user_id,
@@ -107,7 +107,7 @@ class PreferenceManager:
                 )
 
             logger.info(
-                "记录用户偏好: %s -> %s.%s.%s=%s",
+                "Recorded user preference: %s -> %s.%s.%s=%s",
                 user_id,
                 device,
                 action,
@@ -117,27 +117,27 @@ class PreferenceManager:
             return True
 
         except Exception as error:
-            logger.error("记录用户偏好失败: %s", error, exc_info=True)
+            logger.error("Failed to record user preference: %s", error, exc_info=True)
             return False
 
     def get_user_preferences(
         self, user_id: str, scenario: Optional[str] = None
     ) -> Dict:
-        """获取用户偏好。
+        """Get user preferences.
 
         Args:
-            user_id: 用户ID
-            scenario: 场景标识,可选(不指定则返回所有偏好)
+            user_id: User ID
+            scenario: Scenario identifier, optional (returns all preferences if not specified)
 
         Returns:
-            Dict: 用户偏好字典 {scenario: [{device, action, parameter, preferred_value}]}
+            Dict: User preferences dictionary {scenario: [{device, action, parameter, preferred_value}]}
         """
         try:
-            # 从缓存中获取
+            # Get from cache
             with self._lock:
                 user_prefs = self._cache.get(user_id, [])
 
-            # 按场景分组
+            # Group by scenario
             preferences_by_scenario: Dict[str, List[Dict]] = {}
 
             for pref in user_prefs:
@@ -158,33 +158,33 @@ class PreferenceManager:
                 )
 
             logger.debug(
-                "获取用户偏好: %s (场景: %s) -> %d 条",
+                "Retrieved user preferences: %s (scenario: %s) -> %d items",
                 user_id,
-                scenario or "全部",
+                scenario or "all",
                 sum(len(v) for v in preferences_by_scenario.values()),
             )
 
             return preferences_by_scenario
 
         except Exception as error:
-            logger.error("获取用户偏好失败: %s", error, exc_info=True)
+            logger.error("Failed to get user preferences: %s", error, exc_info=True)
             return {}
 
     def apply_preferences(
         self, user_id: str, scenario: str, task_plan: Dict
     ) -> Dict:
-        """将用户偏好应用到任务计划。
+        """Apply user preferences to task plan.
 
         Args:
-            user_id: 用户ID
-            scenario: 场景标识
-            task_plan: 任务计划字典
+            user_id: User ID
+            scenario: Scenario identifier
+            task_plan: Task plan dictionary
 
         Returns:
-            Dict: 应用偏好后的任务计划
+            Dict: Task plan after applying preferences
         """
         try:
-            # 获取该场景的用户偏好
+            # Get user preferences for this scenario
             preferences = self.get_user_preferences(user_id, scenario)
 
             if scenario not in preferences:
@@ -192,23 +192,23 @@ class PreferenceManager:
 
             user_prefs = preferences[scenario]
 
-            # 应用偏好到任务
+            # Apply preferences to tasks
             tasks = task_plan.get("tasks", [])
             modified_tasks = []
 
             for task in tasks:
                 modified_task = task.copy()
 
-                # 检查是否有匹配的偏好
+                # Check for matching preferences
                 for pref in user_prefs:
                     if (
                         pref["device"] == task.get("device")
                         and pref["action"] == task.get("action")
                     ):
-                        # 应用偏好值
+                        # Apply preferred value
                         modified_task["value"] = pref["preferred_value"]
                         logger.info(
-                            "应用用户偏好: %s.%s=%s",
+                            "Applied user preference: %s.%s=%s",
                             pref["device"],
                             pref["action"],
                             pref["preferred_value"],
@@ -220,7 +220,7 @@ class PreferenceManager:
             return task_plan
 
         except Exception as error:
-            logger.error("应用用户偏好失败: %s", error, exc_info=True)
+            logger.error("Failed to apply user preferences: %s", error, exc_info=True)
             return task_plan
 
     def _save_to_db(
@@ -232,18 +232,18 @@ class PreferenceManager:
         parameter: str,
         preferred_value: str,
     ) -> bool:
-        """保存偏好到数据库。
+        """Save preference to database.
 
         Args:
-            user_id: 用户ID
-            scenario: 场景标识
-            device: 设备ID
-            action: 动作名称
-            parameter: 参数名称
-            preferred_value: 偏好值
+            user_id: User ID
+            scenario: Scenario identifier
+            device: Device ID
+            action: Action name
+            parameter: Parameter name
+            preferred_value: Preferred value
 
         Returns:
-            bool: 是否保存成功
+            bool: Whether save was successful
         """
         try:
             if not self.db_connection:
@@ -251,7 +251,7 @@ class PreferenceManager:
 
             cursor = self.db_connection.cursor()
 
-            # 使用INSERT ... ON DUPLICATE KEY UPDATE
+            # Use INSERT ... ON DUPLICATE KEY UPDATE
             query = f"""
                 INSERT INTO {self.table_name}
                 (user_id, scenario, device, action, parameter, preferred_value, created_at, updated_at)
@@ -268,11 +268,11 @@ class PreferenceManager:
             self.db_connection.commit()
             cursor.close()
 
-            logger.debug("偏好已保存到数据库")
+            logger.debug("Preference saved to database")
             return True
 
         except Exception as error:
-            logger.error("保存偏好到数据库失败: %s", error, exc_info=True)
+            logger.error("Failed to save preference to database: %s", error, exc_info=True)
             return False
 
     def load_from_db(self, user_id: str) -> int:
@@ -298,7 +298,7 @@ class PreferenceManager:
             rows = cursor.fetchall()
             cursor.close()
 
-            # 加载到缓存
+            # Load to cache
             with self._lock:
                 self._cache[user_id] = []
                 for row in rows:
@@ -314,23 +314,23 @@ class PreferenceManager:
                         }
                     )
 
-            logger.info("从数据库加载用户偏好: %s -> %d 条", user_id, len(rows))
+            logger.info("Loaded user preferences from database: %s -> %d items", user_id, len(rows))
             return len(rows)
 
         except Exception as error:
-            logger.error("从数据库加载偏好失败: %s", error, exc_info=True)
+            logger.error("Failed to load preferences from database: %s", error, exc_info=True)
             return 0
 
     def clear_cache(self, user_id: Optional[str] = None) -> None:
-        """清空缓存。
+        """Clear cache.
 
         Args:
-            user_id: 用户ID,不指定则清空所有
+            user_id: User ID, clear all if not specified
         """
         with self._lock:
             if user_id:
                 self._cache.pop(user_id, None)
-                logger.info("清空用户缓存: %s", user_id)
+                logger.info("Cleared user cache: %s", user_id)
             else:
                 self._cache.clear()
-                logger.info("清空所有缓存")
+                logger.info("Cleared all caches")

@@ -30,7 +30,7 @@ public class HistoryActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
-        setTitle("数据接收历史记录");
+        setTitle("Data Reception History");
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this,"iot_db",null,1);
         db = databaseHelper.getWritableDatabase();
@@ -42,7 +42,7 @@ public class HistoryActivity extends Activity {
         b_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(HistoryActivity.this,"返回至主菜单",Toast.LENGTH_LONG).show();
+                Toast.makeText(HistoryActivity.this,"Return to Main Menu",Toast.LENGTH_LONG).show();
                 startActivity(new Intent(HistoryActivity.this, MainActivity.class));
             }
         });
@@ -81,13 +81,13 @@ public class HistoryActivity extends Activity {
 
         if (cursor.moveToFirst()) {
             do {
-                //遍历Cursor对象
+                //Traverse Cursor object
                 int date_temp = cursor.getInt(cursor.getColumnIndexOrThrow("time"));
                 temperature = cursor.getFloat(cursor.getColumnIndexOrThrow("temperature"));
                 humidity = cursor.getFloat(cursor.getColumnIndexOrThrow("humidity"));
                 brightness = cursor.getFloat(cursor.getColumnIndexOrThrow("brightness"));
 
-                // 加入list
+                //Add to list
                 HashMap<String,Object>item = new HashMap<String,Object>();
                 item.put("time",date);
                 item.put("temperature", temperature);

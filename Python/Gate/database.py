@@ -1,6 +1,6 @@
-"""网关本地数据库操作模块。
+"""Gateway local database operation module.
 
-负责本地 MySQL 数据库的连接、初始化和数据存储。
+Responsible for local MySQL database connection, initialization, and data storage.
 """
 
 import logging
@@ -13,17 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 def create_database_connection(db_config: GateDbConfig, database: str = None) -> MySQLConnection:
-    """创建 MySQL 数据库连接。
+    """Create MySQL database connection.
 
     Args:
-        db_config: 数据库连接配置（用户名、密码）。
-        database: 数据库名，为 None 时不指定数据库。
+        db_config: Database connection configuration (username, password).
+        database: Database name, if None then no specific database.
 
     Returns:
-        MySQLConnection 连接对象。
+        MySQLConnection connection object.
 
     Raises:
-        mysql.connector.Error: 数据库连接失败。
+        mysql.connector.Error: Database connection failed.
     """
     kwargs = {
         "host": DB_HOST,
@@ -36,29 +36,29 @@ def create_database_connection(db_config: GateDbConfig, database: str = None) ->
         kwargs["database"] = database
 
     conn = mysql.connector.connect(**kwargs)
-    logger.info("MySQL 数据库连接成功: %s", database or "(无指定数据库)")
+    logger.info("MySQL database connection successful: %s", database or "(no database specified)")
     return conn
 
 
 def init_gate_database(db_config: GateDbConfig) -> MySQLConnection:
-    """初始化网关本地数据库，创建数据库和表（如果不存在）。
+    """Initialize gateway local database, create database and tables (if not exist).
 
-    流程：
-        1. 连接 MySQL 服务器（不指定数据库）
-        2. 创建 gate_database 数据库
-        3. 创建 gate_local_data 表
-        4. 重新连接到 gate_database
+    Process:
+        1. Connect to MySQL server (no database specified)
+        2. Create gate_database database
+        3. Create gate_local_data table
+        4. Reconnect to gate_database
 
     Args:
-        db_config: 数据库连接配置。
+        db_config: Database connection configuration.
 
     Returns:
-        指向 gate_database 的 MySQLConnection。
+        MySQLConnection pointing to gate_database.
 
     Raises:
-        mysql.connector.Error: 数据库初始化失败。
+        mysql.connector.Error: Database initialization failed.
     """
-    # 第一次连接：创建数据库和表
+    # First connection: create database and tables
     conn = create_database_connection(db_config, database=None)
     try:
         cursor = conn.cursor()
@@ -75,23 +75,23 @@ def init_gate_database(db_config: GateDbConfig) -> MySQLConnection:
             "`curtain_status` int NULL);"
         )
         conn.commit()
-        logger.info("网关本地数据库和表初始化完成")
+        logger.info("Gateway local database and table initialization complete")
     finally:
         conn.close()
 
-    # 第二次连接：连接到 gate_database
+    # Second connection: connect to gate_database
     conn = create_database_connection(db_config, database="gate_database")
-    logger.info("网关本地数据库就绪")
+    logger.info("Gateway local database ready")
     return conn
 
 
 def save_sensor_data(conn: MySQLConnection, data: dict) -> None:
-    """将传感器数据存入本地数据库。
+    """Save sensor data to local database.
 
     Args:
-        conn: 数据库连接对象。
-        data: 传感器数据字典，需包含以下键：
-            Light_TH, Temperature, Humidity, Light_CU, Brightness, Curtain_status。
+        conn: Database connection object.
+        data: Sensor data dictionary, must contain following keys:
+            Light_TH, Temperature, Humidity, Light_CU, Brightness, Curtain_status.
     """
     import datetime
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -116,6 +116,6 @@ def save_sensor_data(conn: MySQLConnection, data: dict) -> None:
         cursor.execute(sql, params)
         conn.commit()
     except Exception as error:
-        logger.error("传感器数据存储失败: %s", error)
+        logger.error("Sensor data storage failed: %s", error)
     finally:
         cursor.close()

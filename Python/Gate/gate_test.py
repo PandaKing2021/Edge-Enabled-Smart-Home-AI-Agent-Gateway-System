@@ -1,6 +1,6 @@
-"""IoT 智能网关主入口 - 测试版本。
+"""IoT smart gateway main entry - test version.
 
-添加测试模式，使数据库服务器连接可选。
+Added test mode, making database server connection optional.
 """
 
 import logging
@@ -10,13 +10,13 @@ import threading
 import os
 from pathlib import Path
 
-# 设置编码
+# Set encoding
 if sys.platform == 'win32':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-# 将项目根目录和 Gate 目录添加到 sys.path，确保模块导入正确
+# Add project root directory and Gate directory to sys.path to ensure correct module imports
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _GATE_DIR = Path(__file__).resolve().parent
 
@@ -53,46 +53,46 @@ import aliyun_handler
 
 logger = logging.getLogger(__name__)
 
-# 测试模式标志
+# Test mode flag
 TEST_MODE = '--test' in sys.argv or os.getenv('TEST_MODE', 'false').lower() == 'true'
 
 
 def connect_db_server(config: GateConfig) -> socket.socket:
-    """连接到远程数据库服务器（测试模式下可选）。
+    """Connect to remote database server (optional in test mode).
 
     Args:
-        config: 网关完整配置。
+        config: Complete gateway configuration.
 
     Returns:
-        数据库服务器的 TCP 套接字，或 None（测试模式）。
+        TCP socket to database server, or None (in test mode).
 
     Raises:
-        ConnectionError: 连接失败（非测试模式）。
+        ConnectionError: Connection failed (non-test mode).
     """
     if TEST_MODE:
-        logger.warning("测试模式：跳过数据库服务器连接")
+        logger.warning("Test mode: Skipping database server connection")
         return None
 
     db_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         db_socket.connect((config.db_server.ip, config.db_server.db_server_port))
-        logger.info("与数据库服务器连接成功: %s:%d",
+        logger.info("Connected to database server successfully: %s:%d",
                      config.db_server.ip, config.db_server.db_server_port)
         return db_socket
     except OSError as error:
-        logger.error("与数据库服务器连接失败: %s", error)
+        logger.error("Failed to connect to database server: %s", error)
         raise
 
 
 def check_user_config_with_server(db_socket: socket.socket, user_config: UserConfig) -> None:
-    """通过数据库服务器校验本地用户配置。
+    """Verify local user configuration through database server.
 
     Args:
-        db_socket: 数据库服务器的 TCP 套接字（测试模式下可为None）。
-        user_config: 本地用户配置。
+        db_socket: TCP socket to database server (can be None in test mode).
+        user_config: Local user configuration.
     """
     if TEST_MODE or db_socket is None:
-        logger.warning("测试模式：跳过用户配置校验")
+        logger.warning("Test mode: Skipping user configuration verification")
         return
 
     to_check_user = format_userdata_string(
@@ -105,9 +105,9 @@ def check_user_config_with_server(db_socket: socket.socket, user_config: UserCon
     op, data, status_code = decode_comm_data(response)
 
     if status_code == 1:
-        logger.info("本地用户配置正常: %s", user_config.username)
+        logger.info("Local user configuration is valid: %s", user_config.username)
     elif status_code == 0:
-        logger.warning("本地用户配置异常，正在检查修正...")
+        logger.warning("Local user configuration is invalid, checking and correcting...")
         try:
             corr_response = recv_json(db_socket)
             _, corr_data, corr_status = decode_comm_data(corr_response)
@@ -118,27 +118,27 @@ def check_user_config_with_server(db_socket: socket.socket, user_config: UserCon
                     UserConfig(username=corr_user, password=corr_pwd, device_key=corr_key),
                     config_dir=_GATE_DIR,
                 )
-                logger.info("网关配置纠正成功，请重启网关")
+                logger.info("Gateway configuration corrected successfully, please restart the gateway")
             else:
-                logger.error("用户未注册")
+                logger.error("User is not registered")
         except Exception as error:
-            logger.error("配置修正过程异常: %s", error)
+            logger.error("Exception during configuration correction: %s", error)
     elif status_code == 2:
-        logger.error("数据库服务器异常，请检查连接")
+        logger.error("Database server error, please check connection")
 
 
 def fetch_permitted_devices(db_socket: socket.socket, device_key: str) -> list:
-    """从数据库服务器获取允许的设备列表（测试模式下返回默认列表）。
+    """Get list of permitted devices from database server (returns default list in test mode).
 
     Args:
-        db_socket: 数据库服务器的 TCP 套接字（测试模式下可为None）。
-        device_key: 设备密钥。
+        db_socket: TCP socket to database server (can be None in test mode).
+        device_key: Device key.
 
     Returns:
-        允许的设备名称列表。
+        List of permitted device names.
     """
     if TEST_MODE or db_socket is None:
-        logger.warning("测试模式：使用默认设备列表")
+        logger.warning("Test mode: Using default device list")
         return ["A1_tem_hum", "A1_curtain", "A1_security"]
 
     send_json(db_socket, format_comm_data_string("check_device_id", device_key, 1))
@@ -147,73 +147,73 @@ def fetch_permitted_devices(db_socket: socket.socket, device_key: str) -> list:
     _, device_list, status_code = decode_comm_data(response)
 
     if status_code == 1:
-        # 新格式：device_list 为 JSON 数组
+        # New format: device_list is a JSON array
         if isinstance(device_list, list):
             devices = [d for d in device_list if d]
         else:
             devices = [d for d in device_list.split("+") if d]
-        logger.info("获取允许设备信息成功: %s", devices)
+        logger.info("Successfully fetched permitted device information: %s", devices)
         return devices
     else:
-        logger.error("获取允许设备信息失败: %s", device_list)
+        logger.error("Failed to fetch permitted device information: %s", device_list)
         return []
 
 
 def main():
-    """网关主入口函数。"""
-    # 初始化日志
+    """Gateway main entry function."""
+    # Initialize logging
     setup_logging(log_dir=_GATE_DIR)
 
     if TEST_MODE:
         print("="*60)
-        print("WARNING: 测试模式已启用")
-        print("   - 跳过数据库服务器连接")
-        print("   - 使用默认设备列表")
-        print("   - 跳过用户配置校验")
+        print("WARNING: Test mode is enabled")
+        print("   - Skipping database server connection")
+        print("   - Using default device list")
+        print("   - Skipping user configuration verification")
         print("="*60)
 
-    # 加载配置
+    # Load configuration
     config = load_gate_config(config_dir=_GATE_DIR)
     user_config = load_user_config(config_dir=_GATE_DIR)
 
-    # 初始化共享状态
+    # Initialize shared state
     state = GatewayState()
     state.data_from_source = dict(DEFAULT_SENSOR_DATA)
     state.update_data(DEFAULT_THRESHOLD_DATA)
 
-    # 初始化本地数据库
+    # Initialize local database
     try:
         gate_db_conn = db_module.init_gate_database(config.gate_db)
         db_module._gate_db_conn = gate_db_conn
     except Exception as error:
-        logger.critical("本地数据库初始化失败: %s", error)
+        logger.critical("Local database initialization failed: %s", error)
         if not TEST_MODE:
             sys.exit(1)
         else:
-            logger.warning("测试模式：继续运行，跳过本地数据库")
+            logger.warning("Test mode: Continuing to run, skipping local database")
 
-    # 连接数据库服务器
+    # Connect to database server
     db_socket = None
     try:
         db_socket = connect_db_server(config)
     except (ConnectionError, OSError, TimeoutError) as e:
         if TEST_MODE:
-            logger.warning("测试模式：数据库服务器连接失败，继续运行: " + str(e))
+            logger.warning("Test mode: Database server connection failed, continuing to run: " + str(e))
         else:
-            logger.critical("无法连接数据库服务器，网关退出")
+            logger.critical("Unable to connect to database server, gateway exiting")
             sys.exit(1)
 
-    # 校验本地用户配置
+    # Verify local user configuration
     try:
         check_user_config_with_server(db_socket, user_config)
     except Exception as error:
-        logger.error("用户配置校验失败: %s", error)
+        logger.error("User configuration verification failed: %s", error)
 
-    # 获取允许设备列表
+    # Get permitted device list
     permitted_devices = fetch_permitted_devices(db_socket, user_config.device_key)
     state.set_permitted_device(permitted_devices)
 
-    # 阿里云 IoT 配置
+    # Aliyun IoT configuration
     iot_config = AliyunIotConfig(
         product_key="k0gpoX7HaYl",
         device_name="all_devices",
@@ -221,18 +221,18 @@ def main():
         region_id="cn-shanghai",
     )
 
-    # 创建 Android 通信处理器
-    # 注意：测试模式下，db_socket可能为None，AndroidHandler需要处理
+    # Create Android communication handler
+    # Note: In test mode, db_socket may be None, AndroidHandler needs to handle this
     if db_socket is None:
-        logger.warning("测试模式：Android处理器将无法与数据库服务器通信")
-        # 创建一个虚拟的socket对象
+        logger.warning("Test mode: Android handler will be unable to communicate with database server")
+        # Create a mock socket object
         class MockSocket:
             def send(self, data): pass
         db_socket = MockSocket()
 
     android_ctrl = android_handler.AndroidHandler(db_socket, config_dir=_GATE_DIR)
 
-    # 启动各通信线程
+    # Start communication threads
     threads = [
         threading.Thread(
             target=sensor_handler.sensor_handler,
@@ -260,16 +260,16 @@ def main():
 
     for t in threads:
         t.start()
-        logger.info("线程 '%s' 已启动", t.name)
+        logger.info("Thread '%s' started", t.name)
 
-    logger.info("网关就绪")
+    logger.info("Gateway ready")
 
-    # 主线程等待子线程
+    # Main thread waits for child threads
     try:
         for t in threads:
             t.join()
     except KeyboardInterrupt:
-        logger.info("网关收到退出信号，正在关闭...")
+        logger.info("Gateway received exit signal, shutting down...")
         if gate_db_conn:
             gate_db_conn.close()
         if db_socket and hasattr(db_socket, 'close'):

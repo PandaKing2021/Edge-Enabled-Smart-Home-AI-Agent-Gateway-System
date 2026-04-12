@@ -25,7 +25,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="新用户名:"
+                android:text="New Username:"
                 android:textSize="20sp"
                 android:textColor="@color/black"
                 />
@@ -45,7 +45,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="密    码:"
+                android:text="Password:"
                 android:textSize="20sp"
                 android:textColor="@color/black"
                 />
@@ -66,7 +66,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="请输入设备绑定码:"
+                android:text="Please enter device binding code:"
                 android:textSize="20sp"
                 android:textColor="@color/black"
                 />
@@ -90,7 +90,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:shadowColor="#BA55D3"
-                android:text="提交"
+                android:text="Submit"
                 android:textSize="20dp"
                 android:layout_marginRight="60dp"
                 ></Button>
@@ -100,7 +100,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:shadowColor="#BA55D3"
-                android:text="返回"
+                android:text="Back"
                 android:textSize="20dp"></Button>
 
         </LinearLayout>
