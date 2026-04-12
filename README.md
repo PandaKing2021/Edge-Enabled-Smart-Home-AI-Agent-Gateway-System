@@ -578,7 +578,7 @@ If this project is helpful to you, please give a ⭐️ Star!
 
 <div align="center">
 
-**Made with ❤️ by EdgeHomeAI Team**
+**Made with ❤️ by PandaKing**
 
 **System Status**: ✅ Production Ready
 
