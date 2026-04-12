@@ -284,11 +284,6 @@ EdgeHomeAI/
 │   ├── esp8266_curtain_unit/          # Curtain unit firmware
 │   └── esp8266_doorsecurity_unit/     # Door security unit firmware
 │
-├── meteral/                             # Project Resource Documents
-│   ├── 实验指标                         # Experiment evaluation metrics
-│   ├── 系统扩展设计.txt                 # System extension design
-│   ├── GLM使用方法.txt                   # GLM API usage guide
-│   └── script/                          # Legacy testing and experiment documents
 │
 ├── README.md                            # Project documentation (this file)
 ├── AI_AGENT_README.md                   # AI Agent Usage Guide
