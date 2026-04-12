@@ -1,0 +1,203 @@
+{
+  "devices": {
+    "Light_TH": {
+      "name": "智能空调",
+      "name_en": "Smart Air Conditioner",
+      "type": "climate_control",
+      "description": "智能空调系统,支持温度和湿度控制",
+      "capabilities": [
+        "温度控制",
+        "湿度控制",
+        "开关控制"
+      ],
+      "fields": {
+        "status_field": "Light_TH",
+        "temperature_field": "Temperature",
+        "humidity_field": "Humidity"
+      },
+      "actions": {
+        "turn_on": {
+          "description": "开启空调",
+          "operation": "light_th_open",
+          "params": null,
+          "effect": "设置温度阈值-1,湿度阈值-1"
+        },
+        "turn_off": {
+          "description": "关闭空调",
+          "operation": "light_th_close",
+          "params": null,
+          "effect": "设置温度阈值101,湿度阈值101"
+        },
+        "set_temperature": {
+          "description": "设置目标温度",
+          "operation": "change_temperature_threshold",
+          "params": {
+            "temperature": {
+              "type": "integer",
+              "range": [16, 30],
+              "unit": "°C",
+              "description": "目标温度值"
+            }
+          }
+        },
+        "set_humidity": {
+          "description": "设置目标湿度",
+          "operation": "change_humidity_threshold",
+          "params": {
+            "humidity": {
+              "type": "integer",
+              "range": [30, 90],
+              "unit": "%",
+              "description": "目标湿度值"
+            }
+          }
+        }
+      },
+      "keywords": ["空调", "温度", "湿度", "制冷", "制热", "凉爽", "温暖", "干燥", "潮湿"]
+    },
+    "Curtain_status": {
+      "name": "智能窗帘",
+      "name_en": "Smart Curtain",
+      "type": "window_covering",
+      "description": "智能窗帘系统,支持开关控制和光照度调节",
+      "capabilities": [
+        "开关控制",
+        "光照度调节"
+      ],
+      "fields": {
+        "status_field": "Curtain_status",
+        "brightness_field": "Brightness"
+      },
+      "actions": {
+        "open": {
+          "description": "打开窗帘",
+          "operation": "curtain_open",
+          "params": null,
+          "effect": "设置光照度阈值-2"
+        },
+        "close": {
+          "description": "关闭窗帘",
+          "operation": "curtain_close",
+          "params": null,
+          "effect": "设置光照度阈值65535"
+        },
+        "set_brightness": {
+          "description": "设置光照度阈值",
+          "operation": "change_brightness_threshold",
+          "params": {
+            "brightness": {
+              "type": "integer",
+              "range": [0, 65535],
+              "unit": "lux",
+              "description": "光照度阈值"
+            }
+          }
+        }
+      },
+      "keywords": ["窗帘", "遮光", "阳光", "光线", "亮度", "拉开", "关上"]
+    },
+    "Light_CU": {
+      "name": "智能灯光",
+      "name_en": "Smart Light",
+      "type": "lighting",
+      "description": "智能灯光系统,支持亮度调节",
+      "capabilities": [
+        "亮度控制"
+      ],
+      "fields": {
+        "brightness_field": "Brightness"
+      },
+      "actions": {
+        "set_brightness": {
+          "description": "设置灯光亮度",
+          "operation": "change_brightness_threshold",
+          "params": {
+            "brightness": {
+              "type": "integer",
+              "range": [0, 65535],
+              "unit": "lux",
+              "description": "亮度值"
+            }
+          }
+        }
+      },
+      "keywords": ["灯光", "亮度", "照明", "开灯", "关灯", "调亮", "调暗"]
+    },
+    "Door_Security_Status": {
+      "name": "智能门禁",
+      "name_en": "Smart Door Lock",
+      "type": "security",
+      "description": "智能门禁系统,支持刷卡验证",
+      "capabilities": [
+        "门禁验证",
+        "安全控制"
+      ],
+      "fields": {
+        "status_field": "Door_Security_Status",
+        "card_id_field": "Door_Secur_Card_id"
+      },
+      "actions": {
+        "verify_card": {
+          "description": "验证门禁卡",
+          "operation": null,
+          "params": {
+            "card_id": {
+              "type": "string",
+              "description": "门禁卡ID"
+            }
+          },
+          "note": "门禁验证由设备自动完成"
+        }
+      },
+      "keywords": ["门禁", "开门", "门锁", "刷卡", "安全"]
+    }
+  },
+  "scenarios": {
+    "sleep": {
+      "name": "睡眠模式",
+      "description": "准备睡眠场景",
+      "keywords": ["困了", "睡觉", "休息", "睡眠", "晚安"],
+      "suggested_actions": [
+        {"device": "Light_TH", "action": "set_temperature", "value": 24},
+        {"device": "Light_TH", "action": "set_humidity", "value": 50},
+        {"device": "Curtain_status", "action": "close"},
+        {"device": "Light_CU", "action": "set_brightness", "value": 0}
+      ]
+    },
+    "movie": {
+      "name": "观影模式",
+      "description": "准备看电影场景",
+      "keywords": ["看电影", "观影", "电影", "影院"],
+      "suggested_actions": [
+        {"device": "Curtain_status", "action": "close"},
+        {"device": "Light_CU", "action": "set_brightness", "value": 10},
+        {"device": "Light_TH", "action": "set_temperature", "value": 23}
+      ]
+    },
+    "leave": {
+      "name": "离家模式",
+      "description": "准备出门场景",
+      "keywords": ["出门", "离开", "上班", "外出"],
+      "suggested_actions": [
+        {"device": "Light_TH", "action": "turn_off"},
+        {"device": "Light_CU", "action": "set_brightness", "value": 0},
+        {"device": "Curtain_status", "action": "close"}
+      ]
+    },
+    "home": {
+      "name": "回家模式",
+      "description": "回到家场景",
+      "keywords": ["回家", "到家", "回来"],
+      "suggested_actions": [
+        {"device": "Light_TH", "action": "turn_on"},
+        {"device": "Light_TH", "action": "set_temperature", "value": 25},
+        {"device": "Curtain_status", "action": "open"}
+      ]
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "created_at": "2026-04-11",
+    "description": "智能家居设备能力描述库,用于AI Agent意图解析和任务编排"
+  }
+}

@@ -1,0 +1,37 @@
+# AI Agent Configuration File
+# 配置智谱AI GLM-4.7-Flash参数
+
+[LLM]
+# 智谱AI API配置
+API_KEY = YOUR_API_KEY
+BASE_URL = https://open.bigmodel.cn/api/paas/v4
+MODEL_NAME = GLM-4.7-Flash
+TEMPERATURE = 0.7
+MAX_TOKENS = 2048
+STREAM = False
+
+[DIALOG]
+# 对话管理配置
+MAX_CONTEXT_TURNS = 5
+SESSION_TIMEOUT = 3600
+
+[RAG]
+# RAG检索配置
+CAPABILITIES_FILE = device_capabilities.json
+TOP_K = 3
+
+[TASK_EXECUTOR]
+# 任务执行器配置
+MAX_RETRY = 3
+TASK_TIMEOUT = 30
+ENABLE_ROLLBACK = True
+
+[PREFERENCE]
+# 偏好学习配置
+ENABLE_PREFERENCE_LEARNING = True
+PREFERENCE_DB_TABLE = user_preferences
+
+[LOGGING]
+# 日志配置
+LOG_LEVEL = INFO
+LOG_FILE = ai_agent.log

@@ -1,0 +1,65 @@
+"""IoT 网关系统公共常量定义。"""
+
+# TCP 通信端口
+PORT_SENSOR = 9300          # 设备节点通信端口（原 3000）
+PORT_ANDROID = 9301         # 移动应用通信端口（原 3001）
+PORT_DB_SERVER = 9302       # 数据库服务器通信端口（原 5000）
+
+# 消息终止符（所有 TCP 消息以 \\n 分隔）
+MSG_TERMINATOR = "\n"
+
+# 缓冲区大小
+BUFFER_SIZE_SMALL = 1024
+BUFFER_SIZE_MEDIUM = 10240
+BUFFER_SIZE_LARGE = 4096
+
+# 网关监听队列长度
+LISTEN_BACKLOG = 128
+
+# 数据库相关常量
+DB_HOST = "localhost"
+DB_PORT = 3306
+
+# 通信间隔（秒）
+SENSOR_SEND_INTERVAL = 3
+SENSOR_RECV_INTERVAL = 3
+ANDROID_SEND_INTERVAL = 3
+ANDROID_RECV_INTERVAL = 3
+ALIYUN_UPLOAD_INTERVAL = 5
+
+# 阿里云 IoT MQTT 端口
+ALIYUN_MQTT_PORT = 1883
+
+# 门禁状态
+DOOR_DENIED = 0
+DOOR_GRANTED = 1
+
+# 设备数据字段名
+FIELD_DOOR_CARD_ID = "Door_Secur_Card_id"
+FIELD_DOOR_STATUS = "Door_Security_Status"
+FIELD_LIGHT_TH = "Light_TH"
+FIELD_TEMPERATURE = "Temperature"
+FIELD_HUMIDITY = "Humidity"
+FIELD_LIGHT_CU = "Light_CU"
+FIELD_BRIGHTNESS = "Brightness"
+FIELD_CURTAIN_STATUS = "Curtain_status"
+FIELD_DEVICE_KEY = "device_key"
+
+# 设备数据默认值
+DEFAULT_SENSOR_DATA = {
+    FIELD_DOOR_CARD_ID: "",
+    FIELD_DOOR_STATUS: 0,
+    FIELD_LIGHT_TH: 0,
+    FIELD_TEMPERATURE: 0,
+    FIELD_HUMIDITY: 0,
+    FIELD_LIGHT_CU: 0,
+    FIELD_BRIGHTNESS: 0,
+    FIELD_CURTAIN_STATUS: 1,
+}
+
+DEFAULT_THRESHOLD_DATA = {
+    FIELD_LIGHT_TH: 0,
+    FIELD_TEMPERATURE: 0,
+    FIELD_HUMIDITY: 0,
+    FIELD_BRIGHTNESS: 0,
+}
