@@ -502,9 +502,9 @@ For more issues, please refer to the troubleshooting section in [Deployment Guid
 
 ---
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 [MIT License](LICENSE) 开源协议。
+This project is open-sourced under the [MIT License](LICENSE).
 
 ```
 MIT License
