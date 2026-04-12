@@ -60,7 +60,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   EdgeHomeAI System Architecture               │
+│                   EdgeHomeAI System Architecture            │
 └─────────────────────────────────────────────────────────────┘
 
                     ┌──────────────┐
@@ -70,24 +70,24 @@
                            │ TCP
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Python Edge Gateway Server                      │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  • Device Communication Module (Port 9300)         │    │
-│  │  • Android Communication Module (Port 9301)       │    │
-│  │  • Database Server Connection (Port 9302)        │    │
-│  │  • AI Agent Dialog Orchestration Engine           │    │
-│  │  • Intelligent Decision Engine                     │    │
-│  │  • Aliyun IoT Upload Module                      │    │
-│  │  • Data Preprocessing and Analysis                │    │
-│  │  • User Behavior Prediction and Pre-control       │    │
-│  └────────────────────────────────────────────────────┘    │
+│              Python Edge Gateway Server                     │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  • Device Communication Module (Port 9300)         │     │
+│  │  • Android Communication Module (Port 9301)        │     │
+│  │  • Database Server Connection (Port 9302)          │     │
+│  │  • AI Agent Dialog Orchestration Engine            │     │
+│  │  • Intelligent Decision Engine                     │     │
+│  │  • Aliyun IoT Upload Module                        │     │
+│  │  • Data Preprocessing and Analysis                 │     │
+│  │  • User Behavior Prediction and Pre-control        │     │
+│  └────────────────────────────────────────────────────┘     │
 └─────────────────────────────────────────────────────────────┘
         │               │               │
         ▼               ▼               ▼
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
 │  AC Unit    │  │ Curtain Unit│  │Door Access  │
 │ (A1_tem_hum)│  │(A1_curtain) │  │(A1_security)│
-│   ESP8266    │  │   ESP8266    │  │   ESP8266    │
+│   ESP8266   │  │   ESP8266   │  │   ESP8266   │
 └─────────────┘  └─────────────┘  └─────────────┘
    Sensor         Sensor         Sensor
    DHT11         BH1750         MFRC522
@@ -97,14 +97,14 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    AI Agent Architecture                      │
+│                    AI Agent Architecture                    │
 └─────────────────────────────────────────────────────────────┘
 
     User Input (Natural Language)
            │
            ▼
 ┌──────────────────┐
-│  Intent Planner   │ ← Intent Recognition and Task Planning
+│  Intent Planner  │ ← Intent Recognition and Task Planning
 │  (GLM-4.7-Flash) │
 └────────┬─────────┘
          │
