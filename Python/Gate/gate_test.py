@@ -230,7 +230,75 @@ def main():
             def send(self, data): pass
         db_socket = MockSocket()
 
-    android_ctrl = android_handler.AndroidHandler(db_socket, config_dir=_GATE_DIR)
+    # Initialize AI Agent components
+    dialog_manager = None
+    intent_planner = None
+    task_executor = None
+    device_controller = None
+    preference_manager = None
+
+    try:
+        from ai_agent import DialogManager, IntentPlanner, TaskExecutor, DeviceController, PreferenceManager
+
+        # Read API key from config
+        ai_config_file = _GATE_DIR / "ai_agent_config.txt"
+        api_key = None
+        if ai_config_file.exists():
+            with open(ai_config_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("API_KEY"):
+                        key = line.split("=", 1)[1].strip()
+                        if key and key != "YOUR_API_KEY":
+                            api_key = key
+                        break
+
+        # Initialize DeviceController (always available - works with GatewayState)
+        device_controller = DeviceController(state)
+        logger.info("DeviceController initialized")
+
+        # Initialize TaskExecutor (always available)
+        task_executor = TaskExecutor(device_controller)
+        logger.info("TaskExecutor initialized")
+
+        # Initialize DialogManager (always available)
+        dialog_manager = DialogManager()
+        logger.info("DialogManager initialized")
+
+        # Initialize PreferenceManager (always available)
+        preference_manager = PreferenceManager()
+        logger.info("PreferenceManager initialized")
+
+        # Initialize IntentPlanner (requires API key for real LLM)
+        if api_key:
+            capability_retriever = CapabilityRetriever(
+                str(_GATE_DIR / "device_capabilities.json")
+            )
+            intent_planner = IntentPlanner(
+                api_key=api_key,
+                capability_retriever=capability_retriever,
+                preference_manager=preference_manager,
+            )
+            logger.info("IntentPlanner initialized with real LLM (GLM-4.7-Flash)")
+        else:
+            # Use simulated IntentPlanner
+            intent_planner = None
+            logger.warning("IntentPlanner not initialized (no API key). Chat commands will use simulated responses.")
+
+    except ImportError as error:
+        logger.warning("AI Agent module not available: %s", error)
+    except Exception as error:
+        logger.warning("AI Agent initialization failed: %s", error)
+
+    android_ctrl = android_handler.AndroidHandler(
+        db_socket,
+        config_dir=_GATE_DIR,
+        dialog_manager=dialog_manager,
+        intent_planner=intent_planner,
+        task_executor=task_executor,
+        device_controller=device_controller,
+        preference_manager=preference_manager,
+    )
 
     # Start communication threads
     threads = [

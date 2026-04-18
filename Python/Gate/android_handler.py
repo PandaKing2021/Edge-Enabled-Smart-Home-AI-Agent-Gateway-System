@@ -330,8 +330,8 @@ class AndroidHandler:
             user_input: User input natural language command.
         """
         try:
-            # Check if AI Agent module is available
-            if not all([self.dialog_manager, self.intent_planner, self.task_executor, self.device_controller]):
+            # Check if core components are available
+            if not all([self.task_executor, self.device_controller]):
                 send_json(cs, {
                     "type": "chat_response",
                     "status": "error",
@@ -345,7 +345,12 @@ class AndroidHandler:
             device_state = self.device_controller.get_all_device_states()
 
             # 2. Call intent planner to generate task plan
-            task_plan = self.intent_planner.quick_plan(user_input, device_state)
+            if self.intent_planner:
+                # Use real LLM
+                task_plan = self.intent_planner.quick_plan(user_input, device_state)
+            else:
+                # Use simulated intent parsing (keyword-based matching)
+                task_plan = self._simulated_intent_parse(user_input, device_state)
 
             # 3. Execute tasks
             execution_result = self.task_executor.execute_task_plan(task_plan)
@@ -358,7 +363,9 @@ class AndroidHandler:
                 "reasoning": task_plan.get("reasoning", ""),
                 "tasks": task_plan.get("tasks", []),
                 "execution_result": execution_result,
-                "message": execution_result.get("message", "Execution completed")
+                "message": execution_result.get("message", "Execution completed"),
+                "cache_hit": task_plan.get("cache_hit", False),
+                "cache_type": task_plan.get("cache_type", ""),
             }
 
             send_json(cs, response)
@@ -371,3 +378,61 @@ class AndroidHandler:
                 "status": "error",
                 "message": f"Processing failed: {str(error)}"
             })
+
+    def _simulated_intent_parse(self, user_input: str, device_state: dict) -> dict:
+        """Simulated intent parsing using keyword matching (fallback when LLM is unavailable).
+
+        Args:
+            user_input: User input natural language command.
+            device_state: Current device status dictionary.
+
+        Returns:
+            Dict: Task plan with reasoning and tasks.
+        """
+        user_input_lower = user_input.lower()
+        tasks = []
+        reasoning = f"[模拟推理] 用户指令: '{user_input}'"
+
+        # Keyword matching for common commands
+        if any(kw in user_input_lower for kw in ["困", "睡", "休息", "晚安"]):
+            reasoning += " -> 检测到睡眠场景"
+            tasks.append({"device": "Light_TH", "action": "set_temperature", "value": 24})
+            tasks.append({"device": "Curtain_status", "action": "close"})
+
+        elif any(kw in user_input_lower for kw in ["空调", "温度"]) and any(kw in user_input_lower for kw in ["开", "打开", "启动"]):
+            reasoning += " -> 检测到打开空调意图"
+            tasks.append({"device": "Light_TH", "action": "turn_on"})
+
+        elif any(kw in user_input_lower for kw in ["空调"]) and any(kw in user_input_lower for kw in ["关", "关闭", "停止"]):
+            reasoning += " -> 检测到关闭空调意图"
+            tasks.append({"device": "Light_TH", "action": "turn_off"})
+
+        elif any(kw in user_input_lower for kw in ["温度", "度"]):
+            import re
+            temp_match = re.search(r'(\d+)\s*度', user_input)
+            if temp_match:
+                temp = int(temp_match.group(1))
+                reasoning += f" -> 检测到设置温度意图: {temp}°C"
+                tasks.append({"device": "Light_TH", "action": "set_temperature", "value": temp})
+            else:
+                reasoning += " -> 温度值未识别"
+                tasks.append({"device": "Light_TH", "action": "turn_on"})
+
+        elif any(kw in user_input_lower for kw in ["窗帘"]) and any(kw in user_input_lower for kw in ["开", "打开"]):
+            reasoning += " -> 检测到打开窗帘意图"
+            tasks.append({"device": "Curtain_status", "action": "open"})
+
+        elif any(kw in user_input_lower for kw in ["窗帘"]) and any(kw in user_input_lower for kw in ["关", "关闭"]):
+            reasoning += " -> 检测到关闭窗帘意图"
+            tasks.append({"device": "Curtain_status", "action": "close"})
+
+        elif any(kw in user_input_lower for kw in ["关闭所有", "全部关闭", "关闭全部"]):
+            reasoning += " -> 检测到关闭所有设备意图"
+            tasks.append({"device": "Light_TH", "action": "turn_off"})
+            tasks.append({"device": "Curtain_status", "action": "close"})
+
+        else:
+            reasoning += " -> 未识别具体意图，默认打开空调"
+            tasks.append({"device": "Light_TH", "action": "turn_on"})
+
+        return {"reasoning": reasoning, "tasks": tasks}
