@@ -1,6 +1,6 @@
 """AI Agent Module - Conversational Task Orchestration System.
 
-Implements smart home task automatic orchestration based on Zhipu AI GLM-4.7-Flash.
+Implements smart home task automatic orchestration based on OpenAI GPT.
 """
 
 from .dialog_manager import DialogManager

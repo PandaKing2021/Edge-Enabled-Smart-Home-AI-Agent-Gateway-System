@@ -1,11 +1,11 @@
 # AI Agent Configuration File
-# Configure ZhipuAI GLM-4.7-Flash parameters
+# Configure OpenAI GPT parameters
 
 [LLM]
-# ZhipuAI API Configuration
-API_KEY = 4ee5e37eeb27416b8d173f99742eba7d.A7aVR15W1I7e2vBj
-BASE_URL = https://open.bigmodel.cn/api/paas/v4
-MODEL_NAME = GLM-4.7-Flash
+# OpenAI API Configuration
+API_KEY = YOUR_API_KEY_HERE
+BASE_URL = https://api.openai.com/v1
+MODEL_NAME = gpt-4o-mini
 TEMPERATURE = 0.7
 MAX_TOKENS = 2048
 STREAM = False

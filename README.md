@@ -22,7 +22,7 @@
 - 🧠 **Edge Intelligence**: AI inference runs locally on home gateway, reducing cloud dependency
 - 🚀 **Low Latency**: End-to-end response time < 10 seconds baseline, **< 100ms for high-frequency commands** with intent caching
 - 🔒 **Privacy Protection**: Sensitive data processed locally, reducing data uploads by 68.8%
-- 🤖 **Natural Interaction**: Conversational task orchestration based on GLM-4.7-Flash
+- 🤖 **Natural Interaction**: Conversational task orchestration based on OpenAI GPT
 - 🏠 **Multi-Device Support**: Unified management of smart devices including AC, curtains, door access, etc.
 - 📱 **Mobile Control**: Android application enables remote monitoring and control
 - 🔄 **Optimization Ready**: Three-tier intent caching reduces LLM API calls by 40-70%
@@ -106,7 +106,7 @@
            ▼
 ┌──────────────────┐
 │  Intent Planner  │ ← Intent Recognition and Task Planning
-│  (GLM-4.7-Flash) │
+│  (OpenAI GPT)    │
 └────────┬─────────┘
          │
          ▼
@@ -324,8 +324,8 @@ Edit `Python/Gate/ai_agent_config.txt`:
 ```ini
 [LLM]
 API_KEY = your_api_key
-BASE_URL = https://open.bigmodel.cn/api/paas/v4
-MODEL_NAME = GLM-4.7-Flash
+BASE_URL = https://api.openai.com/v1
+MODEL_NAME = gpt-4o-mini
 TEMPERATURE = 0.7
 MAX_TOKENS = 2048
 STREAM = False
@@ -347,7 +347,7 @@ CAPABILITIES_FILE = device_capabilities.json
 - **MySQL 5.7+**: Data persistence
 - **Socket**: TCP network communication
 - **Threading**: Multi-threaded concurrent processing
-- **ZhipuAI GLM-4.7-Flash**: Large Language Model API
+- **OpenAI GPT (gpt-4o-mini)**: Large Language Model API
 
 ### Frontend Technology
 - **Android (Java)**: Mobile application development
@@ -605,7 +605,7 @@ Thanks to the following open source projects and technical support:
 - [Android](https://www.android.com/) - Mobile operating system
 - [ESP8266](https://www.espressif.com/) - WiFi module
 - [Aliyun IoT](https://www.aliyun.com/product/iot) - Cloud platform
-- [Zhipu AI](https://open.bigmodel.cn/) - LLM API service
+- [OpenAI](https://platform.openai.com/) - LLM API service
 
 ---
 

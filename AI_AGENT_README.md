@@ -1,11 +1,11 @@
 # AI Agent Conversational Task Orchestration System
 
-Conversational task automation system for smart home implemented based on ZhipuAI GLM-4.7-Flash.
+Conversational task automation system for smart home implemented based on OpenAI GPT.
 
 ## Features
 
 - ✨ **Natural Language Interaction**: Users can control smart home devices through natural language commands
-- 🧠 **Intent Understanding**: Intent parsing and task planning based on GLM-4.7-Flash
+- 🧠 **Intent Understanding**: Intent parsing and task planning based on OpenAI GPT
 - 🔍 **RAG Retrieval**: Enhanced retrieval based on device capability library
 - 💬 **Multi-turn Dialogue**: Supports continuous conversations with context maintenance
 - 📚 **Preference Learning**: Records user corrections, implements personalized optimization
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 ### 2. Configure API Key
 
-Edit `Python/Gate/ai_agent_config.txt`, set your ZhipuAI API Key:
+Edit `Python/Gate/ai_agent_config.txt`, set your OpenAI API Key:
 
 ```
 API_KEY = your_api_key_here
@@ -71,7 +71,7 @@ python gate.py
 │  └──────────────────────────────┘  │
 │  ┌──────────────────────────────┐  │
 │  │  Intent Planner              │  │
-│  │  (GLM-4.7-Flash Intent Parsing) │ │
+│  │  (OpenAI GPT Intent Parsing)   │ │
 │  └──────────────────────────────┘  │
 │  ┌──────────────────────────────┐  │
 │  │  Capability Retriever        │  │
@@ -117,7 +117,7 @@ Manages multi-turn dialogue context, maintains conversation history.
 
 ### 2. IntentPlanner (Intent Parser)
 
-Calls GLM-4.7-Flash API to parse user intent and generate task plan.
+Calls OpenAI GPT API to parse user intent and generate task plan.
 
 **Key Features:**
 - CoT (Chain-of-Thought) reasoning
@@ -244,8 +244,8 @@ Gateway returns:
 ```ini
 [LLM]
 API_KEY = your_api_key_here
-BASE_URL = https://open.bigmodel.cn/api/paas/v4
-MODEL_NAME = GLM-4.7-Flash
+BASE_URL = https://api.openai.com/v1
+MODEL_NAME = gpt-4o-mini
 TEMPERATURE = 0.7
 
 [DIALOG]
@@ -330,8 +330,8 @@ Edit `device_capabilities.json`:
 ## Technology Stack
 
 - **Language**: Python 3.7+
-- **LLM**: ZhipuAI GLM-4.7-Flash
-- **SDK**: zhipuai
+- **LLM**: OpenAI GPT (gpt-4o-mini)
+- **SDK**: openai
 - **Database**: MySQL
 - **Concurrency**: threading
 
@@ -345,4 +345,4 @@ Project Address: EdgeIoT-SmartHomeGateway
 
 ---
 
-**Note**: Using this system requires a ZhipuAI API Key. Please ensure compliance with ZhipuAI's terms of service and usage restrictions.
+**Note**: Using this system requires an OpenAI API Key. Please ensure compliance with OpenAI's terms of service and usage restrictions.

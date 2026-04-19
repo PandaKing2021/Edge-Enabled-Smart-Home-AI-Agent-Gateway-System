@@ -229,8 +229,8 @@ def main():
 
             intent_planner = IntentPlanner(
                 api_key=api_key,
-                base_url=ai_config.get("BASE_URL", "https://open.bigmodel.cn/api/paas/v4"),
-                model_name=ai_config.get("MODEL_NAME", "GLM-4.7-Flash"),
+                base_url=ai_config.get("BASE_URL", "https://api.openai.com/v1"),
+                model_name=ai_config.get("MODEL_NAME", "gpt-4o-mini"),
                 temperature=float(ai_config.get("TEMPERATURE", 0.7)),
                 capability_retriever=capability_retriever,
                 preference_manager=None,  # Initialize later

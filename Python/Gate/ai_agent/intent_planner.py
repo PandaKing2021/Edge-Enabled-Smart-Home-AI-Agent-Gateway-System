@@ -1,6 +1,6 @@
 """Intent parsing and task planner module.
 
-Integrates Zhipu AI GLM-4.7-Flash, implements intent understanding and task planning.
+Integrates OpenAI GPT model, implements intent understanding and task planning.
 """
 
 import hashlib
@@ -10,7 +10,7 @@ import time
 from collections import OrderedDict
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
-from zhipuai import ZhipuAI
+from openai import OpenAI
 
 if TYPE_CHECKING:
     from .capability_retriever import CapabilityRetriever
@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 class IntentPlanner:
     """Intent parsing and task planner.
 
-    Uses GLM-4.7-Flash model to parse user intent and generate task plan.
+    Uses OpenAI GPT model to parse user intent and generate task plan.
 
     Attributes:
-        api_key: Zhipu AI API key
+        api_key: OpenAI API key
         base_url: API base URL
         model_name: Model name
         temperature: Generation temperature
-        client: ZhipuAI client
+        client: OpenAI client
         capability_retriever: Device capability retriever
         preference_manager: Preference manager
     """
@@ -37,8 +37,8 @@ class IntentPlanner:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://open.bigmodel.cn/api/paas/v4",
-        model_name: str = "GLM-4.7-Flash",
+        base_url: str = "https://api.openai.com/v1",
+        model_name: str = "gpt-4o-mini",
         temperature: float = 0.7,
         capability_retriever: Optional["CapabilityRetriever"] = None,
         preference_manager: Optional["PreferenceManager"] = None,
@@ -46,7 +46,7 @@ class IntentPlanner:
         """Initialize intent parser.
 
         Args:
-            api_key: Zhipu AI API key
+            api_key: OpenAI API key
             base_url: API base URL
             model_name: Model name
             temperature: Generation temperature (0-1)
@@ -93,12 +93,12 @@ class IntentPlanner:
             "看电影": {"scenario": "movie"},
         }
 
-        # Initialize ZhipuAI client
+        # Initialize OpenAI client
         try:
-            self.client = ZhipuAI(api_key=api_key, base_url=base_url)
-            logger.info("ZhipuAI client initialized successfully: %s", model_name)
+            self.client = OpenAI(api_key=api_key, base_url=base_url)
+            logger.info("OpenAI client initialized successfully: %s", model_name)
         except Exception as error:
-            logger.error("ZhipuAI client initialization failed: %s", error)
+            logger.error("OpenAI client initialization failed: %s", error)
             raise
 
     def plan_tasks(
@@ -185,8 +185,8 @@ class IntentPlanner:
                 context_history=context_history,
             )
 
-            # 5. Call GLM-4.7-Flash
-            logger.info("Calling GLM-4.7-Flash for intent parsing: %s", user_input)
+            # 5. Call OpenAI GPT
+            logger.info("Calling OpenAI GPT for intent parsing: %s", user_input)
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[{"role": "user", "content": prompt}],
@@ -195,7 +195,7 @@ class IntentPlanner:
 
             # 6. Parse response
             content = response.choices[0].message.content
-            logger.debug("GLM response: %s", content)
+            logger.debug("OpenAI response: %s", content)
 
             task_plan = self._parse_task_plan(content)
 

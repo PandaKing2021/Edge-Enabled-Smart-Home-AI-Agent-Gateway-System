@@ -279,7 +279,7 @@ def main():
                 capability_retriever=capability_retriever,
                 preference_manager=preference_manager,
             )
-            logger.info("IntentPlanner initialized with real LLM (GLM-4.7-Flash)")
+            logger.info("IntentPlanner initialized with real LLM (OpenAI GPT)")
         else:
             # Use simulated IntentPlanner
             intent_planner = None
