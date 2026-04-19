@@ -7,7 +7,6 @@
 [![Python](https://img.shields.io/badge/Python-3.7+-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://github.com)
-[![GLM](https://img.shields.io/badge/AI-GLM--4.7-Flash-orange.svg)](https://open.bigmodel.cn/)
 
 </div>
 
